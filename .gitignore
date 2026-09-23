@@ -17,6 +17,11 @@ myenv/
 *.pt
 *.bin
 *.onnx
+!v3/checkpoints/prototypes.pth
+
+# Legacy experiment versions (kept locally, excluded from git)
+v1/
+v2/
 
 # Dataset & Raw Microscopic Imagery (Excluded as requested)
 scale fish/
