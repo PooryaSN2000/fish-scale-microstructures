@@ -1,0 +1,50 @@
+# Python cache & environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+myenv/
+.venv/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Heavy Model Checkpoints (> 100MB)
+*.pth
+*.pt
+*.bin
+*.onnx
+
+# Dataset & Raw Microscopic Imagery (Excluded as requested)
+scale fish/
+scale_fish/
+*.zip
+*.tar.gz
+
+# Academic Paper Drafts, PDFs & LaTeX files (Excluded as requested)
+*.pdf
+*.tex
+*.aux
+*.log
+*.synctex.gz
+*.out
+*paper*
+*papper*
+paper/
+v1/papper/
+v1/research_paper.*
+v2/paper/
+v3/paper/
+
+# Temporary data, logs, uploads
+uploads/
+**/uploads/
+*.log
+scratch/
+.system_generated/
+.idea/
+.vscode/
+.DS_Store
