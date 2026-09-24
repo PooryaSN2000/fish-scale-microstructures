@@ -7,6 +7,7 @@ from werkzeug.utils import secure_filename
 # Add src to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 from inference import FishClassifier
+from retrain_active_learning import ActiveLearningEngine
 
 import base64
 import csv
@@ -23,6 +24,12 @@ app = Flask(__name__)
 app.json.sort_keys = False
 app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, 'uploads')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Active Learning Engine instance
+al_engine = ActiveLearningEngine(
+    active_learning_dir=ACTIVE_LEARNING_DIR,
+    checkpoints_dir=CHECKPOINT_DIR
+)
 
 # Initialize the 40-class classifier
 try:
@@ -52,6 +59,8 @@ def predict():
     if file.filename == '':
         return jsonify({'error': 'No file selected.'}), 400
         
+    auto_crop = request.form.get('auto_crop', 'false').lower() == 'true'
+        
     if file:
         filename = secure_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -59,7 +68,11 @@ def predict():
         
         try:
             start_time = time.time()
-            pred_class, confidence, all_probs, max_sim, all_sims = classifier.predict(filepath)
+            pred_class, confidence, all_probs, max_sim, all_sims, meta = classifier.predict(
+                filepath, 
+                auto_crop=auto_crop, 
+                return_metadata=True
+            )
             execution_time = time.time() - start_time
             
             # Generate Grad-CAM explainability heatmap before cleanup
@@ -102,12 +115,48 @@ def predict():
                 'top_matches': top_5_matches,
                 'all_similarities': sim_percentages,
                 'gradcam_image': cam_overlay_b64,
-                'execution_time': f"{execution_time:.3f}s"
+                'execution_time': f"{execution_time:.3f}s",
+                'auto_cropped': meta.get('auto_cropped', False),
+                'crop_overlay_image': meta.get('crop_overlay_b64'),
+                'bbox': meta.get('bbox'),
+                'margin': meta.get('margin', 0.0),
+                'top2_species': meta.get('top2_species'),
+                'top2_similarity': meta.get('top2_similarity'),
+                'is_uncertain': meta.get('is_uncertain', False),
+                'uncertainty_reason': meta.get('uncertainty_reason', '')
             })
         except Exception as e:
             if os.path.exists(filepath):
                 os.remove(filepath)
             return jsonify({'error': str(e)}), 500
+
+@app.route('/active_learning/stats', methods=['GET'])
+def active_learning_stats():
+    """
+    Returns statistics and counts from the Active Learning feedback database.
+    """
+    stats = al_engine.get_stats()
+    return jsonify(stats)
+
+@app.route('/active_learning/sync', methods=['POST'])
+def active_learning_sync():
+    """
+    Online Adaptive Active Learning Sync:
+    Synchronizes prototypes in prototypes.pth with all collected verified samples,
+    and immediately reloads them into the in-memory classifier.
+    """
+    if classifier is None:
+        return jsonify({'error': 'Classifier not initialized.'}), 500
+    try:
+        data = request.get_json(silent=True) or {}
+        eta = float(data.get('eta', 0.20))
+        result = al_engine.sync_prototypes(eta=eta)
+        if result.get('samples_processed', 0) > 0:
+            classifier.reload_prototypes(os.path.join(CHECKPOINT_DIR, "prototypes.pth"))
+            print(f"Reloaded updated prototypes into memory.")
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/feedback', methods=['POST'])
 def feedback():

@@ -52,9 +52,65 @@
 
     <main class="container">
         <header class="glass-panel text-center fade-in">
-            <h1><i class="fa-solid fa-fish-fins"></i> AquaLens AI <span style="font-size: 1rem; color: #06b6d4; font-weight: 600; border: 1px solid #06b6d4; padding: 2px 8px; border-radius: 8px; vertical-align: middle;">v3 (40 Species)</span></h1>
-            <p>Hybrid Deep Metric Learning & Open-Set Classifier across 40 Marine Fish Species</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div style="text-align: left; flex: 1; min-width: 280px;">
+                    <h1 style="margin: 0; font-size: 1.8rem;"><i class="fa-solid fa-fish-fins"></i> AquaLens AI <span style="font-size: 0.95rem; color: #06b6d4; font-weight: 600; border: 1px solid #06b6d4; padding: 2px 8px; border-radius: 8px; vertical-align: middle;">v3 (40 Species)</span></h1>
+                    <p style="margin: 0.3rem 0 0 0; font-size: 0.9rem;">Hybrid Deep Metric Learning & Open-Set Classifier across 40 Marine Fish Species</p>
+                </div>
+                <div>
+                    <button id="al-modal-open-btn" class="toggle-btn" style="border-color: #38bdf8; color: #38bdf8; background: rgba(56, 189, 248, 0.1); margin-top: 0; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <i class="fa-solid fa-brain"></i> Active Learning Bank (<span id="al-stat-badge">0</span>)
+                    </button>
+                </div>
+            </div>
         </header>
+
+        <!-- Active Learning Manager Modal -->
+        <div id="al-modal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem;">
+            <div class="glass-panel" style="max-width: 620px; width: 100%; max-height: 85vh; overflow-y: auto; position: relative; border: 1px solid rgba(56, 189, 248, 0.5); box-shadow: 0 0 30px rgba(56, 189, 248, 0.25); background: #0f172a;">
+                <button id="al-modal-close-btn" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #94a3b8; font-size: 1.4rem; cursor: pointer; transition: color 0.2s;">&times;</button>
+                <h3 style="color: #38bdf8; display: flex; align-items: center; gap: 0.5rem; margin-top: 0; font-size: 1.25rem;">
+                    <i class="fa-solid fa-brain"></i> چرخه یادگیری فعال (Active Learning Center)
+                </h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem;">
+                    نمونه‌های میکروسکوپی تاییدشده یا اصلاح‌شده توسط کارشناسان در این بانک ذخیره می‌شوند تا به صورت برخط پروتوتایپ‌های گونه‌ها به‌روزرسانی شوند.
+                </p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.6rem; margin: 1rem 0;">
+                    <div style="background: rgba(255,255,255,0.05); padding: 0.6rem; border-radius: 8px; text-align: center;">
+                        <span style="display: block; font-size: 0.72rem; color: var(--text-muted);">کل تصاویر تاییدشده</span>
+                        <strong id="al-total-verified" style="font-size: 1.3rem; color: #10b981;">0</strong>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 0.6rem; border-radius: 8px; text-align: center;">
+                        <span style="display: block; font-size: 0.72rem; color: var(--text-muted);">تایید مستقیم گونه</span>
+                        <strong id="al-confirmed-count" style="font-size: 1.3rem; color: #38bdf8;">0</strong>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 0.6rem; border-radius: 8px; text-align: center;">
+                        <span style="display: block; font-size: 0.72rem; color: var(--text-muted);">اصلاح شده توسط کارشناس</span>
+                        <strong id="al-corrected-count" style="font-size: 1.3rem; color: #f59e0b;">0</strong>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 0.6rem; border-radius: 8px; text-align: center;">
+                        <span style="display: block; font-size: 0.72rem; color: var(--text-muted);">گونه‌های فعال در بانک</span>
+                        <strong id="al-active-species" style="font-size: 1.3rem; color: #a855f7;">0</strong>
+                    </div>
+                </div>
+
+                <div style="margin: 1rem 0; background: rgba(0,0,0,0.4); border-radius: 8px; padding: 0.75rem; max-height: 140px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.05);">
+                    <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">فهرست گونه‌های موجود در بانک فیدبک:</span>
+                    <div id="al-species-chips" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">هنوز داده‌ای ثبت نشده است.</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; flex-wrap: wrap; gap: 0.75rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+                    <span id="al-last-sync-time" style="font-size: 0.75rem; color: var(--text-muted);">آخرین همگام‌سازی: انجام نشده</span>
+                    <button id="al-sync-now-btn" class="toggle-btn" style="background: #06b6d4; color: #000; border: none; font-weight: bold; padding: 0.5rem 1rem; cursor: pointer; border-radius: 6px; margin: 0;">
+                        <i class="fa-solid fa-arrows-rotate"></i> اعمال و به‌روزرسانی پروتوتایپ‌ها (Sync)
+                    </button>
+                </div>
+                <div id="al-sync-alert" class="hidden" style="margin-top: 0.75rem; padding: 0.6rem; border-radius: 6px; font-size: 0.82rem;"></div>
+            </div>
+        </div>
 
         <section class="glass-panel upload-section fade-in delay-1">
             <div id="drop-zone" class="drop-zone">
@@ -65,6 +121,14 @@
                     <span class="file-info">Supports JPG, PNG, BMP (Scale microscopic images)</span>
                 </div>
                 <input type="file" id="file-input" accept="image/*" hidden>
+            </div>
+            
+            <!-- Smart Auto-Crop Scale Toggle Switch -->
+            <div style="display: flex; justify-content: center; align-items: center; gap: 0.75rem; margin-top: 1rem;">
+                <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; font-size: 0.86rem; color: var(--text-color); background: rgba(255,255,255,0.04); padding: 0.45rem 0.9rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s ease;">
+                    <input type="checkbox" id="auto-crop-checkbox" style="cursor: pointer; width: 17px; height: 17px; accent-color: #06b6d4;">
+                    <span><i class="fa-solid fa-crop-simple" style="color: #06b6d4;"></i> <strong>Auto-crop Scale</strong> (حذف خودکار حواشی لام و فوکوس بر پولک)</span>
+                </label>
             </div>
             
             <div id="image-preview-container" class="hidden">
@@ -136,6 +200,15 @@
         <!-- Analysis Results Section -->
         <section id="result-section" class="glass-panel result-section hidden fade-in">
             <h3>Analysis Result <span id="exec-time" class="exec-time"></span></h3>
+
+            <!-- Active Learning / Uncertainty Trigger Banner -->
+            <div id="uncertainty-banner" class="hidden" style="margin: 1rem 0; padding: 1rem 1.25rem; background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; border-radius: 12px; display: flex; align-items: flex-start; gap: 1rem;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.4rem; color: #f59e0b; margin-top: 2px;"></i>
+                <div>
+                    <h5 style="margin: 0 0 0.3rem 0; color: #f59e0b; font-size: 0.95rem;">⚠️ هشدار عدم قطعیت بالا (Active Learning Query Trigger)</h5>
+                    <p id="uncertainty-desc" style="margin: 0; font-size: 0.85rem; color: #e2e8f0; line-height: 1.4;"></p>
+                </div>
+            </div>
             
             <!-- 1. Group Membership & Overall Similarity -->
             <div id="domain-status-box" class="domain-status-box">
@@ -161,18 +234,22 @@
                 </div>
             </div>
             
-            <!-- Explainability: Grad-CAM Biological Focus -->
+            <!-- Explainability: Grad-CAM Biological Focus & Scale Localization -->
             <div id="gradcam-container" class="gradcam-container" style="margin: 1.5rem 0; padding: 1.25rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;">
                 <h4 style="margin-bottom: 0.5rem; font-size: 1rem; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fa-solid fa-eye" style="color: #38bdf8;"></i> AI Biological Focus (هیت‌مپ هوش مصنوعی روی پولک - Grad-CAM)
+                    <i class="fa-solid fa-eye" style="color: #38bdf8;"></i> AI Biological Focus & Scale Localization (تشخیص موقعیت و تمرکز زیستی)
                 </h4>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5;">
-                    نواحی گرم (قرمز و زرد) نشان‌دهنده کانون‌ها و خطوط رشد کلیدی (Circuli & Radii) هستند که هوش مصنوعی برای شناسایی این گونه بر آن‌ها تمرکز کرده است.
+                    کادر سبز/آبی نشان‌دهنده موقعیت دقیق تشخیص داده‌شده برای پولک (Scale Localization) و نواحی گرم هیت‌مپ Grad-CAM نشان‌دهنده کانون‌ها و خطوط رشد کلیدی (Circuli & Radii) هستند.
                 </p>
                 <div style="display: flex; gap: 1.5rem; justify-content: center; align-items: center; flex-wrap: wrap;">
                     <div style="text-align: center;">
                         <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">تصویر ورودی (Input Scale)</span>
                         <img id="input-scale-display" src="" alt="Input Scale" style="max-height: 200px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);">
+                    </div>
+                    <div id="crop-preview-box" style="text-align: center; display: none;">
+                        <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">موقعیت پولک (HUD Localization)</span>
+                        <img id="crop-overlay-img" src="" alt="Scale Localization" style="max-height: 200px; border-radius: 8px; border: 1px solid #06b6d4; box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);">
                     </div>
                     <div style="text-align: center;">
                         <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">تمرکز زیستی مدل (Grad-CAM Overlay)</span>
@@ -369,6 +446,7 @@
 
             const formData = new FormData();
             formData.append('file', file);
+            formData.append('auto_crop', autoCropCheckbox.checked);
 
             try {
                 const response = await fetch('/predict', {
@@ -442,6 +520,130 @@
             return barRow;
         }
 
+        const autoCropCheckbox = document.getElementById('auto-crop-checkbox');
+        const uncertaintyBanner = document.getElementById('uncertainty-banner');
+        const uncertaintyDesc = document.getElementById('uncertainty-desc');
+        const cropPreviewBox = document.getElementById('crop-preview-box');
+        const cropOverlayImg = document.getElementById('crop-overlay-img');
+
+        // Active Learning Modal Elements
+        const alModal = document.getElementById('al-modal');
+        const alModalOpenBtn = document.getElementById('al-modal-open-btn');
+        const alModalCloseBtn = document.getElementById('al-modal-close-btn');
+        const alStatBadge = document.getElementById('al-stat-badge');
+        const alTotalVerified = document.getElementById('al-total-verified');
+        const alConfirmedCount = document.getElementById('al-confirmed-count');
+        const alCorrectedCount = document.getElementById('al-corrected-count');
+        const alActiveSpecies = document.getElementById('al-active-species');
+        const alSpeciesChips = document.getElementById('al-species-chips');
+        const alLastSyncTime = document.getElementById('al-last-sync-time');
+        const alSyncNowBtn = document.getElementById('al-sync-now-btn');
+        const alSyncAlert = document.getElementById('al-sync-alert');
+
+        // Fetch & render Active Learning stats
+        async function refreshActiveLearningStats() {
+            try {
+                const res = await fetch('/active_learning/stats');
+                const data = await res.json();
+                
+                if (alStatBadge) alStatBadge.textContent = data.total_verified_images || 0;
+                if (alTotalVerified) alTotalVerified.textContent = data.total_verified_images || 0;
+                if (alConfirmedCount) alConfirmedCount.textContent = data.confirmed_count || 0;
+                if (alCorrectedCount) alCorrectedCount.textContent = data.corrected_count || 0;
+                if (alActiveSpecies) alActiveSpecies.textContent = data.num_active_species || 0;
+                
+                if (alLastSyncTime) {
+                    if (data.last_sync && data.last_sync.timestamp) {
+                        const d = new Date(data.last_sync.timestamp);
+                        alLastSyncTime.textContent = `آخرین همگام‌سازی: ${d.toLocaleDateString('fa-IR')} ${d.toLocaleTimeString('fa-IR')}`;
+                    } else {
+                        alLastSyncTime.textContent = 'آخرین همگام‌سازی: انجام نشده';
+                    }
+                }
+
+                if (alSpeciesChips) {
+                    if (data.species_counts && Object.keys(data.species_counts).length > 0) {
+                        alSpeciesChips.innerHTML = '';
+                        for (const [sp, cnt] of Object.entries(data.species_counts)) {
+                            const chip = document.createElement('span');
+                            chip.className = 'species-pill';
+                            chip.style.borderColor = '#06b6d4';
+                            chip.textContent = `${sp} (${cnt})`;
+                            alSpeciesChips.appendChild(chip);
+                        }
+                    } else {
+                        alSpeciesChips.innerHTML = '<span style="font-size: 0.75rem; color: var(--text-muted);">هنوز داده‌ای ثبت نشده است.</span>';
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load active learning stats:", err);
+            }
+        }
+
+        if (alModalOpenBtn) {
+            alModalOpenBtn.addEventListener('click', () => {
+                alModal.classList.remove('hidden');
+                refreshActiveLearningStats();
+            });
+        }
+
+        if (alModalCloseBtn) {
+            alModalCloseBtn.addEventListener('click', () => {
+                alModal.classList.add('hidden');
+            });
+        }
+
+        if (alModal) {
+            alModal.addEventListener('click', (e) => {
+                if (e.target === alModal) alModal.classList.add('hidden');
+            });
+        }
+
+        if (alSyncNowBtn) {
+            alSyncNowBtn.addEventListener('click', async () => {
+                try {
+                    alSyncNowBtn.disabled = true;
+                    alSyncNowBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> در حال پردازش و همگام‌سازی...';
+                    alSyncAlert.className = 'hidden';
+
+                    const res = await fetch('/active_learning/sync', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ eta: 0.20 })
+                    });
+                    const result = await res.json();
+
+                    alSyncAlert.className = '';
+                    alSyncAlert.style.display = 'block';
+                    if (result.success) {
+                        alSyncAlert.style.background = 'rgba(16, 185, 129, 0.2)';
+                        alSyncAlert.style.color = '#10b981';
+                        alSyncAlert.style.border = '1px solid #10b981';
+                        alSyncAlert.innerHTML = `<i class="fa-solid fa-check"></i> ${result.message} (${result.elapsed_time})`;
+                        refreshActiveLearningStats();
+                    } else {
+                        alSyncAlert.style.background = 'rgba(239, 68, 68, 0.2)';
+                        alSyncAlert.style.color = '#ef4444';
+                        alSyncAlert.style.border = '1px solid #ef4444';
+                        alSyncAlert.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> خطا: ${result.error}`;
+                    }
+                } catch (err) {
+                    alSyncAlert.className = '';
+                    alSyncAlert.style.display = 'block';
+                    alSyncAlert.style.background = 'rgba(239, 68, 68, 0.2)';
+                    alSyncAlert.style.color = '#ef4444';
+                    alSyncAlert.style.border = '1px solid #ef4444';
+                    alSyncAlert.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> خطای سرور: ${err}`;
+                } finally {
+                    alSyncNowBtn.disabled = false;
+                    alSyncNowBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> اعمال و به‌روزرسانی پروتوتایپ‌ها (Sync)';
+                }
+            });
+        }
+
+        // Initialize AL stats on page load
+        refreshActiveLearningStats();
+
         function displayResult(data) {
             currentResultData = data;
             if (confirmBtn) confirmBtn.disabled = false;
@@ -450,6 +652,14 @@
             if (feedbackAlert) { feedbackAlert.style.display = 'none'; feedbackAlert.innerHTML = ''; }
 
             execTime.textContent = `(Analyzed in ${data.execution_time})`;
+
+            // Active Learning Uncertainty Trigger
+            if (data.is_uncertain) {
+                uncertaintyBanner.classList.remove('hidden');
+                uncertaintyDesc.textContent = data.uncertainty_reason;
+            } else {
+                uncertaintyBanner.classList.add('hidden');
+            }
             
             // 1. Group Membership & Overall Similarity
             similarityScore.textContent = data.overall_similarity + '%';
@@ -498,7 +708,7 @@
             predClass.textContent = data.prediction;
             predConf.textContent = data.overall_similarity + '% Sim';
             
-            // Grad-CAM Visualization
+            // Visual Analysis: Input, Localization HUD, Grad-CAM
             const gradcamContainer = document.getElementById('gradcam-container');
             const gradcamImg = document.getElementById('gradcam-overlay-img');
             const inputScaleImg = document.getElementById('input-scale-display');
@@ -508,6 +718,14 @@
                 inputScaleImg.src = imagePreview.src;
             } else {
                 gradcamContainer.style.display = 'none';
+            }
+
+            // Scale Localization Box
+            if (data.crop_overlay_image) {
+                cropPreviewBox.style.display = 'block';
+                cropOverlayImg.src = data.crop_overlay_image;
+            } else {
+                cropPreviewBox.style.display = 'none';
             }
             
             // 3. Top-5 Closest Species Bars
@@ -564,6 +782,7 @@
                     confirmBtn.disabled = true;
                     correctBtn.disabled = true;
                     correctionBox.classList.add('hidden');
+                    refreshActiveLearningStats();
                 } else {
                     alert('Error saving feedback: ' + resData.error);
                 }

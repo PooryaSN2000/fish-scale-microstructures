@@ -19,6 +19,8 @@ class FishClassifier:
     """
     def __init__(self, model_path="checkpoints/best_model.pth", prototypes_path="checkpoints/prototypes.pth"):
         self.device = config.DEVICE
+        self.model_path = model_path
+        self.prototypes_path = prototypes_path
         
         # 1. Load Prototypes and Sub-Centers
         if not os.path.exists(prototypes_path):
@@ -77,11 +79,45 @@ class FishClassifier:
         tensor_img = self.base_transform(proc_img).unsqueeze(0).to(self.device)
         return self.model.extract_embedding(tensor_img)
 
+    def reload_prototypes(self, prototypes_path=None):
+        """
+        Dynamically reloads prototypes and subcenters into memory (e.g. after Active Learning sync).
+        """
+        path = prototypes_path or self.prototypes_path
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"Prototypes not found at {path}")
+            
+        proto_data = torch.load(path, map_location=self.device)
+        self.prototypes = proto_data["prototypes"].to(self.device)
+        self.prototypes_norm = F.normalize(self.prototypes, p=2, dim=-1)
+        
+        if "subcenters" in proto_data and proto_data["subcenters"] is not None:
+            self.subcenters = proto_data["subcenters"].to(self.device)
+            self.subcenters_norm = F.normalize(self.subcenters, p=2, dim=-1)
+        else:
+            self.subcenters = None
+            self.subcenters_norm = None
+            
+        self.class_names = proto_data["class_names"]
+        return len(self.class_names)
+
     @torch.no_grad()
-    def predict(self, image_path: str, use_tta: bool = True, auto_crop: bool = False):
-        image = Image.open(image_path).convert("RGB")
+    def predict(
+        self, 
+        image_path: str, 
+        use_tta: bool = True, 
+        auto_crop: bool = False,
+        return_metadata: bool = False
+    ):
+        raw_image = Image.open(image_path).convert("RGB")
+        bbox = None
+        crop_overlay_b64 = None
+        image = raw_image
+        
         if auto_crop:
-            image = self.detector.crop(image)
+            bbox = self.detector.detect_bbox(raw_image, padding_ratio=0.08)
+            image = raw_image.crop(bbox)
+            crop_overlay_b64 = self.detector.visualize_detection_base64(raw_image, bbox=bbox)
         
         if use_tta:
             # 5-pass TTA: 4 rotation angles + 1 horizontal flip
@@ -119,7 +155,48 @@ class FishClassifier:
         confidence = probs[pred_idx].item()
         all_probs = dict(zip(self.class_names, probs.tolist()))
         
-        return pred_class, confidence, all_probs, max_raw_sim, all_similarities
+        if not return_metadata:
+            return pred_class, confidence, all_probs, max_raw_sim, all_similarities
+            
+        # Top-1 vs Top-2 Margin & Active Learning Uncertainty Analysis
+        sorted_indices = torch.argsort(similarities, descending=True)
+        top1_idx = sorted_indices[0].item()
+        top2_idx = sorted_indices[1].item() if len(sorted_indices) > 1 else top1_idx
+        
+        top1_sim = similarities[top1_idx].item()
+        top2_sim = similarities[top2_idx].item()
+        margin = max(0.0, top1_sim - top2_sim)
+        top2_class = self.class_names[top2_idx]
+        
+        sim_percentage = round(max(0.0, max_raw_sim) * 100, 1)
+        
+        # Evaluate Uncertainty for Active Learning Trigger
+        is_uncertain = False
+        uncertainty_reason = ""
+        
+        if sim_percentage < 60.0:
+            is_uncertain = True
+            uncertainty_reason = f"نمونه خارج از ۴۰ گونه هدف (حداکثر تشابه فقط {sim_percentage}٪)"
+        elif sim_percentage < 75.0:
+            is_uncertain = True
+            uncertainty_reason = f"تشابه مرزی ({sim_percentage}٪). نیاز به تایید کارشناس شیلات"
+        elif margin < 0.08:
+            is_uncertain = True
+            top2_pct = round(top2_sim * 100, 1)
+            uncertainty_reason = f"ابهام بالا بین دو گونه: '{pred_class}' ({sim_percentage}٪) و '{top2_class}' ({top2_pct}٪) - اختلاف حاشیه تنها {margin*100:.1f}٪"
+            
+        metadata = {
+            "bbox": bbox,
+            "crop_overlay_b64": crop_overlay_b64,
+            "auto_cropped": auto_crop,
+            "margin": round(margin * 100, 2),
+            "top2_species": top2_class,
+            "top2_similarity": round(max(0.0, top2_sim) * 100, 1),
+            "is_uncertain": is_uncertain,
+            "uncertainty_reason": uncertainty_reason
+        }
+        
+        return pred_class, confidence, all_probs, max_raw_sim, all_similarities, metadata
 
     def explain(self, image_path: str, target_class_idx: int = None) -> str:
         """
