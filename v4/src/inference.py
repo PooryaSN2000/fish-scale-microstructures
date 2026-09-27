@@ -226,13 +226,30 @@ class FishClassifierV4:
             return pred_class, confidence, all_probs, max_sim, all_sims, meta
         return pred_class, confidence
 
-    def explain(self, image_path: str) -> str:
+    def explain(self, image_input, auto_crop: bool = True) -> str:
         """
         Generates Grad-CAM visual heatmap overlay over the scale microstructures.
+        When auto_crop is True, focuses explainability directly on the localized
+        scale to reveal biological growth rings (circuli & radii) without background bias.
         """
         try:
-            orig_img = Image.open(image_path).convert('RGB')
-            return self.grad_cam.get_base64_overlay(orig_img, prototypes=self.prototypes)
+            if isinstance(image_input, str):
+                orig_img = Image.open(image_input).convert('RGB')
+            else:
+                orig_img = image_input
+
+            target_img = orig_img
+            if auto_crop:
+                try:
+                    x1, y1, x2, y2 = self.detector.detect_bbox(orig_img, square=True)
+                    cropped = orig_img.crop((x1, y1, x2, y2))
+                    if cropped.size[0] > 40 and cropped.size[1] > 40:
+                        target_img = cropped
+                except Exception as e:
+                    print(f"[GradCAM Fallback] Auto-crop fallback: {e}")
+                    target_img = orig_img
+
+            return self.grad_cam.get_base64_overlay(target_img, prototypes=self.prototypes)
         except Exception as e:
             print(f"[GradCAM Warning] {e}")
             return None

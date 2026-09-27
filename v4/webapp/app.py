@@ -86,7 +86,7 @@ def predict():
         pred_species, conf, _, sim, all_sims, meta = classifier_v4.predict(
             filepath, auto_crop=auto_crop, return_metadata=True
         )
-        cam_b64 = classifier_v4.explain(filepath)
+        cam_b64 = classifier_v4.explain(filepath, auto_crop=auto_crop)
         inference_time = time.time() - t0
 
         sim_pct = {k: round(max(0.0, v) * 100, 1) for k, v in all_sims.items()}
