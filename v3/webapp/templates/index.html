@@ -424,9 +424,10 @@
                 }
             });
 
-            // Re-render current result banner if result exists
+            // Re-render current result banner and bars if result exists
             if (currentResultData) {
                 renderStatusCard(currentResultData);
+                renderBars(currentResultData);
             }
         }
 
@@ -606,14 +607,37 @@
             }
         }
 
-        function createBarRow(className, sim, isTop) {
-            const row = document.createElement('div');
-            row.className = 'bar-row';
+        function createBarRow(className, sim, rank, isTop) {
+            const card = document.createElement('div');
+            card.className = isTop ? 'bar-card top-match' : 'bar-card';
 
-            const label = document.createElement('div');
-            label.className = 'bar-label';
-            label.textContent = className;
-            label.title = className;
+            // Line 1: Complete Species Taxonomic Name & Ranking
+            const header = document.createElement('div');
+            header.className = 'bar-header';
+
+            const rankBadge = document.createElement('span');
+            rankBadge.className = 'bar-rank';
+            rankBadge.textContent = `#${rank}`;
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'bar-species-name';
+            nameSpan.textContent = className;
+            nameSpan.title = className;
+
+            header.appendChild(rankBadge);
+            header.appendChild(nameSpan);
+
+            if (isTop) {
+                const topTag = document.createElement('span');
+                topTag.className = 'bar-top-tag';
+                const tagText = (currentLang === 'fa') ? 'بیشترین تطابق' : 'Top Match';
+                topTag.innerHTML = `<i class="fa-solid fa-crown"></i> ${tagText}`;
+                header.appendChild(topTag);
+            }
+
+            // Line 2: Progress Track & Percentage Badge
+            const metricLine = document.createElement('div');
+            metricLine.className = 'bar-metric-line';
 
             const track = document.createElement('div');
             track.className = 'bar-track';
@@ -621,28 +645,55 @@
             const fill = document.createElement('div');
             fill.className = 'bar-fill';
 
+            let badgeClass = 'badge-low';
             if (sim >= 75) {
                 fill.style.background = 'linear-gradient(90deg, #059669, #0284c7)';
+                badgeClass = 'badge-high';
             } else if (sim >= 60) {
                 fill.style.background = 'linear-gradient(90deg, #d97706, #eab308)';
+                badgeClass = 'badge-mid';
             } else {
                 fill.style.background = '#94a3b8';
+                badgeClass = 'badge-low';
             }
 
             setTimeout(() => {
                 fill.style.width = Math.min(100, Math.max(0, sim)) + '%';
             }, 80);
 
-            const percent = document.createElement('div');
-            percent.className = 'bar-percent';
-            percent.textContent = sim + '%';
+            const percentBadge = document.createElement('span');
+            percentBadge.className = `bar-percent-badge ${badgeClass}`;
+            const pctSign = (currentLang === 'fa') ? '٪' : '%';
+            const simText = (currentLang === 'fa') ? 'درصد تشابه' : 'Similarity';
+            percentBadge.textContent = `${sim}${pctSign}`;
+            percentBadge.title = `${simText}: ${sim}%`;
 
             track.appendChild(fill);
-            row.appendChild(label);
-            row.appendChild(track);
-            row.appendChild(percent);
+            metricLine.appendChild(track);
+            metricLine.appendChild(percentBadge);
 
-            return row;
+            card.appendChild(header);
+            card.appendChild(metricLine);
+
+            return card;
+        }
+
+        function renderBars(data) {
+            if (!data) return;
+
+            // Top-5 Bars
+            barsContainer.innerHTML = '';
+            const topEntries = Object.entries(data.top_matches).sort((a, b) => b[1] - a[1]);
+            topEntries.forEach(([name, sim], idx) => {
+                barsContainer.appendChild(createBarRow(name, sim, idx + 1, idx === 0));
+            });
+
+            // All 40 Bars
+            allBarsContainer.innerHTML = '';
+            const allEntries = Object.entries(data.all_similarities).sort((a, b) => b[1] - a[1]);
+            allEntries.forEach(([name, sim], idx) => {
+                allBarsContainer.appendChild(createBarRow(name, sim, idx + 1, idx === 0));
+            });
         }
 
         function displayResult(data) {
@@ -688,19 +739,8 @@
                 gradcamBox.classList.add('hidden');
             }
 
-            // Top-5 Bars
-            barsContainer.innerHTML = '';
-            const topEntries = Object.entries(data.top_matches).sort((a, b) => b[1] - a[1]);
-            topEntries.forEach(([name, sim], idx) => {
-                barsContainer.appendChild(createBarRow(name, sim, idx === 0));
-            });
-
-            // All 40 Bars
-            allBarsContainer.innerHTML = '';
-            const allEntries = Object.entries(data.all_similarities).sort((a, b) => b[1] - a[1]);
-            allEntries.forEach(([name, sim], idx) => {
-                allBarsContainer.appendChild(createBarRow(name, sim, idx === 0));
-            });
+            // Render 2-line similarity bars
+            renderBars(data);
 
             resultSection.classList.remove('hidden');
             resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });

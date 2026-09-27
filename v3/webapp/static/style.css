@@ -535,6 +535,8 @@ body {
     font-weight: 800;
     color: var(--text-primary);
     letter-spacing: -0.02em;
+    word-break: break-word;
+    line-height: 1.3;
 }
 
 .match-confidence-badge {
@@ -628,36 +630,106 @@ body {
 .bars-list {
     display: flex;
     flex-direction: column;
-    gap: 0.55rem;
+    gap: 0.65rem;
 }
 
-.bar-row {
+/* Individual Species Match Card (Two-Line Layout) */
+.bar-card {
+    background: #ffffff;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: all 0.15s ease;
+}
+
+.bar-card:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+    box-shadow: var(--shadow-xs);
+}
+
+.bar-card.top-match {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+/* Line 1: Complete Species Taxonomic Name & Ranking */
+.bar-header {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.55rem;
+    width: 100%;
 }
 
-.bar-label {
-    width: 220px;
-    font-size: 0.82rem;
+.bar-rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: var(--text-secondary);
+    border: 1px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+.bar-card.top-match .bar-rank {
+    background: #dcfce7;
+    color: #15803d;
+    border-color: #86efac;
+}
+
+.bar-species-name {
+    font-size: 0.92rem;
+    font-weight: 600;
     color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-weight: 500;
+    line-height: 1.4;
+    word-break: break-word;
+    white-space: normal;
+    flex: 1;
 }
 
-html[dir="rtl"] .bar-label {
+html[dir="rtl"] .bar-species-name {
     text-align: right;
 }
 
-html[dir="ltr"] .bar-label {
+html[dir="ltr"] .bar-species-name {
     text-align: left;
+}
+
+.bar-top-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #15803d;
+    background: #dcfce7;
+    border: 1px solid #86efac;
+    padding: 0.15rem 0.55rem;
+    border-radius: 99px;
+    margin-inline-start: auto;
+    flex-shrink: 0;
+}
+
+/* Line 2: Progress Track & Percentage Badge */
+.bar-metric-line {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
 }
 
 .bar-track {
     flex: 1;
-    height: 10px;
+    height: 8px;
     background: #e2e8f0;
     border-radius: 99px;
     overflow: hidden;
@@ -667,19 +739,38 @@ html[dir="ltr"] .bar-label {
     height: 100%;
     border-radius: 99px;
     width: 0%;
-    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: width 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.bar-percent {
-    width: 55px;
-    text-align: right;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--text-secondary);
+.bar-percent-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.18rem 0.6rem;
+    border-radius: 6px;
+    min-width: 62px;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
 }
 
-html[dir="rtl"] .bar-percent {
-    text-align: left;
+.badge-high {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.badge-mid {
+    background: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+.badge-low {
+    background: #f8fafc;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
 }
 
 /* Active Learning Feedback Card */
