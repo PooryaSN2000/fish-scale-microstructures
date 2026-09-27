@@ -18,6 +18,7 @@ myenv/
 *.bin
 *.onnx
 !v3/checkpoints/prototypes.pth
+!v4/checkpoints/prototypes.pth
 
 # Legacy experiment versions (kept locally, excluded from git)
 v1/
@@ -43,6 +44,7 @@ v1/papper/
 v1/research_paper.*
 v2/paper/
 v3/paper/
+v4/paper/
 
 # Temporary data, logs, uploads
 uploads/

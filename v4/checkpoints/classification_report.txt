@@ -1,0 +1,67 @@
+AquaLens v4 Final Evaluation Report
+Top-1: 91.41%, Top-3: 98.77%, Top-5: 100.00%
+Head Accuracy: 95.45%, Med Accuracy: 86.36%, Tail (Few-Shot): 90.57%
+
+                                                                 precision    recall  f1-score   support
+
+                               Acanthopagrus Cuvieri(Day, 1878)       0.50      1.00      0.67         2
+                           Acanthopagrus latus (Houltuyn. 1782)       1.00      1.00      1.00         2
+                             Argyrops spinifer (Forsskal, 1775)       1.00      1.00      1.00         1
+                                    Ariomma indicum (Day, 1871)       0.60      1.00      0.75         3
+Carangoides bajad orange gold spotted trevally( Forsskål, 1775)       1.00      1.00      1.00         2
+                             Cynoglossus arel (Schneider, 1801)       1.00      1.00      1.00         1
+                        Diplodus  Kotschyi (Steindachner, 1876)       1.00      1.00      1.00         1
+                                Drepane punctata(linnaeus,1758)       0.83      1.00      0.91         5
+                              Drepane punctate (Linnaeus, 1758)       1.00      1.00      1.00         1
+                           Dussumieria acuta(Valenciennes, 1836       1.00      1.00      1.00         1
+                          Epinephelus areolatus (Forsskal,1775)       1.00      1.00      1.00         1
+                   Epinephelus chlorostigma(Valenciennes, 1829)       0.67      1.00      0.80         2
+                            Epinephelus coioides(hamilton,1822)       0.67      1.00      0.80         2
+                     Epinephelus diacanthus(Valenciennes, 1828)       1.00      1.00      1.00         2
+                               Epinephelus radiatus (Day, 1868)       1.00      1.00      1.00         3
+               Euryglossa orientalis  (Bloch & Schneider, 1801)       0.00      0.00      0.00         1
+                                Gerres filamentosus Cuvier,1829       1.00      0.83      0.91         6
+            Hemiramphus archipelagicus collette and Parin, 1978       1.00      1.00      1.00         1
+                           Heniochus acuminatus(linnaeus, 1758)       1.00      1.00      1.00         4
+                              Lethrinus crocineus (smith, 1959)       0.80      1.00      0.89         4
+                         Lethrinus microdon(Valenciennes, 1830)       0.67      1.00      0.80         2
+                                    Liza klunzingeri(Day, 1888)       1.00      1.00      1.00         2
+                            Liza subviridis(Valenciennes, 1836)       1.00      1.00      1.00         1
+                      Lutjanus argentimaculatus(Forsskal, 1775)       0.00      0.00      0.00         1
+                           Lutjanus fulviflammus(Forsskal 1775)       1.00      1.00      1.00         1
+                                      Lutjanus johni Bloch 1792       0.95      1.00      0.98        20
+                      Lutjanus lemniscatus (Valenciennes, 1828)       1.00      0.50      0.67         4
+                                   Lutjanus lutjanus Bloch 1790       0.90      0.90      0.90        10
+                                Lutjanus russelli(Bleaker, 1849       0.50      1.00      0.67         1
+                                   Nematolosa nasus(Bloch,1795)       1.00      1.00      1.00         1
+                             Nemipterus japanicus (Bloch, 1791)       1.00      1.00      1.00         1
+                        Nemipterus peronii (Valenciennes, 1830)       0.75      1.00      0.86         3
+                               Otolithes ruber(schneider, 1801)       1.00      1.00      1.00         2
+                             Parastromateus niger (Bloch, 1725)       1.00      1.00      1.00         1
+                       Parupeneus heptacanthus (Lacepede, 1802)       1.00      0.67      0.80         3
+                             Platax orbicularis(Forsskal, 1775)       1.00      0.50      0.67         2
+                         Platycephalus indicus (linnaeus, 1758)       1.00      0.86      0.92         7
+                       Plectorhinchus gaterinus(Forsskal, 1775)       1.00      1.00      1.00         1
+                        Plectorhinchus pictus (Tortonese, 1935)       1.00      1.00      1.00         1
+                        Plectorhinchus schotaf (Forsskal, 1775)       0.80      1.00      0.89         4
+                           Pomadasus argenteus (Forsskal, 1775)       1.00      0.33      0.50         3
+                            Pseudorhombus elevatus Ogilby, 1912       1.00      1.00      1.00         1
+                                   Saurida tumbil (Bloch, 1975)       1.00      1.00      1.00         3
+                        Scarus persicus (Randall & Bruce, 1983)       1.00      0.50      0.67         2
+                             Scolopsis taeniatus (cuvier. 1830)       1.00      0.75      0.86         4
+                                Scolopsis vosmeri (Bloch, 1792)       1.00      1.00      1.00         5
+                                  Siganus javus(linnaeus, 1766)       1.00      1.00      1.00         2
+     Sillago attenuata McKay, 1985Sillago attenuata McKay, 1985       1.00      0.50      0.67         2
+                                Sillago sihama (Forsskal, 1775)       1.00      1.00      1.00         3
+                              Sphyraena flavicauda Rupple, 1838       1.00      1.00      1.00         1
+                      Sphyraena putnamiae Jordan and Seale,1905       1.00      1.00      1.00         2
+                                  Trapon jarbua(Forsskal, 1775)       1.00      1.00      1.00         1
+                                     Trapon puta (Cuvier, 1829)       1.00      1.00      1.00         3
+                                 Upeneus sulphureusCuvier, 1829       1.00      1.00      1.00        13
+             anodontostoma chacunda Hamilton and Buchanan, 1822       1.00      1.00      1.00         1
+                  lutjanus malabarius(Bloch and Schneider,1801)       1.00      1.00      1.00         3
+                          pomacanthus maculosus(Forsskal, 1775)       1.00      1.00      1.00         1
+
+                                                       accuracy                           0.91       163
+                                                      macro avg       0.91      0.90      0.89       163
+                                                   weighted avg       0.93      0.91      0.91       163
