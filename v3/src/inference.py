@@ -4,11 +4,18 @@ import torch.nn.functional as F
 from PIL import Image
 from torchvision.transforms import v2
 
-import config
-from model import FishArcNet
-from dataset import apply_clahe_preprocessing
-from gradcam import GradCAMExplainer
-from scale_detector import ScaleDetector
+try:
+    from . import config
+    from .model import FishArcNet
+    from .dataset import apply_clahe_preprocessing
+    from .gradcam import GradCAMExplainer
+    from .scale_detector import ScaleDetector
+except ImportError:
+    import config
+    from model import FishArcNet
+    from dataset import apply_clahe_preprocessing
+    from gradcam import GradCAMExplainer
+    from scale_detector import ScaleDetector
 
 
 class FishClassifier:
