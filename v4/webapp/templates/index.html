@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AquaLens AI v4 &bull; Side-by-Side Model Comparison Arena</title>
-    <!-- Modern Google Typography -->
+    <title>AquaLens AI v4 &bull; سامانه‌ هوشمند شناسایی پولک ماهیان</title>
+    <!-- Modern Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -16,20 +16,29 @@
 <body class="light-mode">
 
     <!-- Top Minimal Navigation -->
-    <nav class="app-nav">
+    <nav class="top-navbar">
         <div class="nav-container">
-            <div class="brand-group">
-                <div class="brand-logo-icon">
+            <div class="brand-wrapper">
+                <div class="brand-icon">
                     <i class="fa-solid fa-dna"></i>
                 </div>
-                <div class="brand-text">
-                    <span class="brand-title">AquaLens AI <span class="version-tag">Arena (v3 vs v4)</span></span>
-                    <span class="brand-subtitle">Fish Scale Microstructure Comparative Biometrics</span>
+                <div>
+                    <div class="brand-title">
+                        AquaLens AI
+                        <span class="version-tag">v4.0 &bull; ۵۷ گونه زیستی</span>
+                    </div>
                 </div>
             </div>
 
             <div class="nav-actions">
-                <!-- Language Toggle -->
+                <!-- Active Learning Stats Modal Trigger -->
+                <button id="open-al-btn" class="btn-nav-al">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <span data-i18n="al_nav_title">یادگیری فعال</span>
+                    <span id="nav-al-badge" class="al-badge">{{ al_stats.total_verified if al_stats else 0 }}</span>
+                </button>
+
+                <!-- Language Switcher -->
                 <div class="lang-switch-group">
                     <button id="lang-fa-btn" class="lang-btn active" onclick="setLanguage('fa')">فارسی</button>
                     <button id="lang-en-btn" class="lang-btn" onclick="setLanguage('en')">EN</button>
@@ -38,27 +47,29 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
+    <!-- Main Content Container -->
     <main class="main-container">
 
-        <!-- Hero Section -->
+        <!-- Minimal Hero Section -->
         <header class="hero-section">
-            <h1 data-i18n="hero_title">مقایسه همزمان سامانه‌های هوشمند شناسایی پولک ماهیان</h1>
-            <p data-i18n="hero_desc">آزمایشگاه مقایسه‌ای عملکرد هوش مصنوعی بین نسخه ۳ (پایه ۴۰ گونه) و نسخه ۴ (مقاوم به دوربین و سنسور + ۵۷ گونه)</p>
+            <h1 data-i18n="hero_title">سامانه هوشمند شناسایی ریزساختار پولک ماهیان</h1>
+            <p data-i18n="hero_desc">شناسایی زیستی دقیق ۵۷ گونه با یادگیری ژرف مقاوم به نویز دوربین و تنوع نوری (MixStyle + CB-ArcFace + Spherical-TTA)</p>
+            
+            <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
+                <span class="arena-tag" style="color: var(--primary); font-weight: 600; background: var(--primary-light); border: 1px solid var(--primary-border); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem;">
+                    <i class="fa-solid fa-shield-halved"></i> <span data-i18n="tag_mixstyle">مقاوم به نوع دوربین و لنز (MixStyle)</span>
+                </span>
+                <span class="arena-tag" style="color: #059669; font-weight: 600; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem;">
+                    <i class="fa-solid fa-scale-balanced"></i> <span data-i18n="tag_cbarcface">حامی گونه‌های نادر (CB-ArcFace)</span>
+                </span>
+                <span class="arena-tag" style="color: #d97706; font-weight: 600; background: #fffbeb; border: 1px solid #fde68a; padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem;">
+                    <i class="fa-solid fa-compass"></i> <span data-i18n="tag_tta">تطابق کروی چندزاویه (Spherical-TTA)</span>
+                </span>
+                <span class="arena-tag" style="color: #7c3aed; font-weight: 600; background: #f5f3ff; border: 1px solid #ddd6fe; padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem;">
+                    <i class="fa-solid fa-fish-fins"></i> <span data-i18n="tag_species">۵۷ گونه زیستی دریای جنوب</span>
+                </span>
+            </div>
         </header>
-
-        <!-- Model Mode Switcher -->
-        <div class="mode-switcher-container">
-            <button id="mode-compare-btn" class="btn-mode active" onclick="setMode('compare')">
-                <i class="fa-solid fa-code-compare"></i> <span data-i18n="mode_compare">مقایسه همزمان v3 در برابر v4 (Side-by-Side Arena)</span>
-            </button>
-            <button id="mode-v4-btn" class="btn-mode" onclick="setMode('v4')">
-                <i class="fa-solid fa-shield-halved"></i> <span data-i18n="mode_v4">نسخه ۴ به تنهایی (۵۷ گونه + MixStyle)</span>
-            </button>
-            <button id="mode-v3-btn" class="btn-mode" onclick="setMode('v3')">
-                <i class="fa-solid fa-cube"></i> <span data-i18n="mode_v3">نسخه ۳ به تنهایی (۴۰ گونه پایه)</span>
-            </button>
-        </div>
 
         <!-- Upload & Analysis Card -->
         <section class="clean-card">
@@ -77,7 +88,7 @@
                 <img id="image-preview" src="" alt="Micrograph Preview">
                 <div id="loading-overlay" class="hidden">
                     <div class="spinner"></div>
-                    <span id="loading-text-el" data-i18n="loading_text" style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">در حال تحلیل موازی روی هر دو مدل v3 و v4...</span>
+                    <span id="loading-text-el" data-i18n="loading_text" style="font-size: 0.92rem; font-weight: 600; color: var(--text-primary);">در حال تحلیل ریزساختار و استخراج ویژگی‌های کروی v4...</span>
                 </div>
                 <div>
                     <button id="reset-btn" class="btn-reset">
@@ -98,170 +109,108 @@
             </div>
         </section>
 
-        <!-- Reference Species Gallery Card -->
+        <!-- Reference Species Gallery & Directory Card -->
         <section class="clean-card species-gallery-card">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
                 <div>
-                    <h3><i class="fa-solid fa-layer-group" style="color: var(--primary);"></i> <span data-i18n="gallery_title">گونه‌های مرجع تحت پوشش</span></h3>
-                    <p style="font-size: 0.83rem; color: var(--text-secondary);" data-i18n="gallery_desc">چند نمونه از تصاویر میکروسکوپی استاندارد موجود در پایگاه داده جهت آزمون مقایسه‌ای:</p>
+                    <h3><i class="fa-solid fa-layer-group" style="color: var(--primary);"></i> <span data-i18n="gallery_title">پایگاه مرجع ۵۷ گونه زیستی</span></h3>
+                    <p style="font-size: 0.83rem; color: var(--text-secondary);" data-i18n="gallery_desc">چند نمونه از تصاویر میکروسکوپی استاندارد موجود در پایگاه داده جهت آزمون سریع:</p>
                 </div>
-                <button id="toggle-species-btn" class="btn-sample" style="font-size: 0.8rem;">
-                    <i class="fa-solid fa-list"></i> <span data-i18n="all_species_btn">مشاهده نام ۵۷ گونه v4</span>
-                </button>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="toggle-species-btn" class="btn-sample" style="font-size: 0.8rem;">
+                        <i class="fa-solid fa-list"></i> <span data-i18n="all_species_btn">مشاهده لیست کامل ۵۷ گونه</span>
+                    </button>
+                </div>
             </div>
 
+            <!-- Quick Sample Thumbnails -->
             <div class="gallery-grid">
                 <div class="gallery-item" onclick="loadSampleByFilename('Lutjanus_johni_Bloch_1792.jpg')">
                     <img src="{{ url_for('static', filename='samples/Lutjanus_johni_Bloch_1792.jpg') }}" alt="Lutjanus johni">
-                    <span>L. johni</span>
+                    <span>Lutjanus johni</span>
                 </div>
                 <div class="gallery-item" onclick="loadSampleByFilename('Upeneus_sulphureusCuvier_1829.jpg')">
                     <img src="{{ url_for('static', filename='samples/Upeneus_sulphureusCuvier_1829.jpg') }}" alt="Upeneus sulphureus">
-                    <span>U. sulphureus</span>
-                </div>
-                <div class="gallery-item" onclick="loadSampleByFilename('Lutjanus_lutjanus_Bloch_1790.jpg')">
-                    <img src="{{ url_for('static', filename='samples/Lutjanus_lutjanus_Bloch_1790.jpg') }}" alt="Lutjanus lutjanus">
-                    <span>L. lutjanus</span>
+                    <span>Upeneus sulphureus</span>
                 </div>
                 <div class="gallery-item" onclick="loadSampleByFilename('Platycephalus_indicus_linnaeus_1758.jpg')">
                     <img src="{{ url_for('static', filename='samples/Platycephalus_indicus_linnaeus_1758.jpg') }}" alt="Platycephalus indicus">
-                    <span>P. indicus</span>
+                    <span>Platycephalus indicus</span>
                 </div>
                 <div class="gallery-item" onclick="loadSampleByFilename('Gerres_filamentosus_Cuvier1829.jpg')">
                     <img src="{{ url_for('static', filename='samples/Gerres_filamentosus_Cuvier1829.jpg') }}" alt="Gerres filamentosus">
-                    <span>G. filamentosus</span>
+                    <span>Gerres filamentosus</span>
+                </div>
+                <div class="gallery-item" onclick="loadSampleByFilename('Lutjanus_lutjanus_Bloch_1790.jpg')">
+                    <img src="{{ url_for('static', filename='samples/Lutjanus_lutjanus_Bloch_1790.jpg') }}" alt="Lutjanus lutjanus">
+                    <span>Lutjanus lutjanus</span>
                 </div>
                 <div class="gallery-item" onclick="loadSampleByFilename('Scolopsis_vosmeri_Bloch_1792.jpg')">
                     <img src="{{ url_for('static', filename='samples/Scolopsis_vosmeri_Bloch_1792.jpg') }}" alt="Scolopsis vosmeri">
-                    <span>S. vosmeri</span>
+                    <span>Scolopsis vosmeri</span>
                 </div>
             </div>
 
-            <!-- Collapsible Full 57 Species Names List -->
-            <div id="full-species-list" class="chips-container hidden" style="margin-top: 1rem; margin-bottom: 0;">
-                {% for sp in species_v4 %}
-                    <span class="species-chip">{{ sp }}</span>
-                {% endfor %}
+            <!-- Collapsible & Filterable Full 57 Species Drawer -->
+            <div id="full-species-list" class="hidden" style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px dashed var(--card-border);">
+                <div style="margin-bottom: 0.75rem;">
+                    <input type="text" id="species-search-input" placeholder="جستجو در میان ۵۷ نام علمی گونه‌ها..." style="width: 100%; padding: 0.55rem 0.85rem; border: 1px solid var(--card-border); border-radius: var(--radius-sm); font-size: 0.85rem;">
+                </div>
+                <div class="chips-container" id="species-chips-wrapper">
+                    {% for sp in species_list %}
+                        <span class="species-chip" data-name="{{ sp }}">{{ sp }}</span>
+                    {% endfor %}
+                </div>
             </div>
         </section>
 
         <!-- Analysis Results Card -->
         <section id="result-section" class="clean-card hidden">
             <div class="result-header">
-                <h2><i class="fa-solid fa-scale-balanced" style="color: var(--primary);"></i> <span data-i18n="result_heading">نتیجه ارزیابی و آنالیز مقایسه‌ای عملکرد</span></h2>
+                <h2><i class="fa-solid fa-microscope" style="color: var(--primary);"></i> <span data-i18n="result_heading">نتیجه شناسایی و تحلیل ریخت‌سنجی</span></h2>
                 <span id="exec-time" class="exec-time"></span>
             </div>
 
-            <!-- Top Consensus / Verdict Banner (For Compare Mode) -->
-            <div id="consensus-banner" class="consensus-banner agree hidden">
-                <div class="consensus-icon" id="consensus-icon"><i class="fa-solid fa-check-double"></i></div>
-                <div class="consensus-body">
-                    <h4 id="consensus-title">همگرایی کامل دو مدل</h4>
-                    <p id="consensus-desc">هر دو مدل با تشابه ساختاری بالا روی گونه شناسایی‌شده اتفاق نظر دارند.</p>
+            <!-- Calibrated Membership & Status Banner -->
+            <div id="status-card" class="status-card in-group">
+                <div class="status-card-icon" id="status-card-icon"><i class="fa-solid fa-circle-check"></i></div>
+                <div class="status-card-body">
+                    <h4 id="status-title">عضو قطعی ۵۷ گونه هدف</h4>
+                    <p id="status-desc">تطابق ساختاری در سطح بالا تایید شد.</p>
                 </div>
             </div>
 
-            <!-- Side-by-Side Dual Arena Grid -->
-            <div id="arena-dual-grid" class="arena-dual-grid">
-                
-                <!-- Left Column: AquaLens v3 -->
-                <div id="col-v3" class="arena-column col-v3">
-                    <div class="arena-col-header">
-                        <h3 style="color: #334155;"><i class="fa-solid fa-cube"></i> AquaLens v3 (Baseline)</h3>
-                        <span class="col-badge col-badge-v3">۴۰ گونه</span>
-                    </div>
-                    <div class="arena-feature-tags">
-                        <span class="arena-tag">ConvNeXt-Tiny</span>
-                        <span class="arena-tag">Standard ArcFace</span>
-                        <span class="arena-tag">Single-View</span>
-                    </div>
-
-                    <!-- v3 Status Card -->
-                    <div id="status-card-v3" class="status-card in-group" style="margin-bottom: 0.5rem; padding: 0.75rem 1rem;">
-                        <div class="status-card-icon" id="status-card-icon-v3" style="font-size: 1.15rem;"><i class="fa-solid fa-circle-check"></i></div>
-                        <div class="status-card-body">
-                            <h4 id="status-title-v3" style="font-size: 0.85rem;">عضو گروه ۴۰ گونه</h4>
-                            <p id="status-desc-v3" style="font-size: 0.78rem;">تشخیص قطعی با متریک استاندارد</p>
-                        </div>
-                    </div>
-
-                    <!-- v3 Primary Match -->
-                    <div class="primary-match-card" style="padding: 1rem; margin-bottom: 0.75rem;">
-                        <div>
-                            <div class="match-species-title" data-i18n="closest_species_label">گونه پیشنهادی v3:</div>
-                            <div id="predicted-class-v3" class="match-species-name" style="font-size: 1.15rem;">-</div>
-                        </div>
-                        <div class="match-confidence-badge" style="font-size: 0.95rem; padding: 0.35rem 0.8rem;">
-                            <i class="fa-solid fa-bullseye"></i>
-                            <span id="predicted-sim-v3">-%</span>
-                        </div>
-                    </div>
-
-                    <!-- v3 Top 5 Bars -->
-                    <div class="similarity-chart" style="margin-bottom: 0;">
-                        <h4 style="font-size: 0.85rem;"><i class="fa-solid fa-bars-staggered"></i> ۵ گونه برتر در دامنه v3</h4>
-                        <div id="bars-v3" class="bars-list"></div>
-                    </div>
-
-                    <div style="font-size: 0.75rem; color: var(--text-muted); text-align: left; margin-top: auto; padding-top: 0.5rem; border-top: 1px dashed #e2e8f0;">
-                        <i class="fa-regular fa-clock"></i> زمان پردازش v3: <strong id="time-v3">-</strong>
-                    </div>
+            <!-- Uncertainty Alert Box (if triggered) -->
+            <div id="uncertainty-box" class="uncertainty-box hidden">
+                <div class="uncertainty-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div>
+                    <h5 data-i18n="uncertainty_title">توجه: لزوم بازبینی نمونه</h5>
+                    <p id="uncertainty-desc">-</p>
                 </div>
-
-                <!-- Right Column: AquaLens v4 -->
-                <div id="col-v4" class="arena-column col-v4">
-                    <div class="arena-col-header">
-                        <h3 style="color: var(--primary);"><i class="fa-solid fa-shield-halved"></i> AquaLens v4 (Domain-Invariant)</h3>
-                        <span class="col-badge col-badge-v4">۵۷ گونه زیستی</span>
-                    </div>
-                    <div class="arena-feature-tags">
-                        <span class="arena-tag" style="color: var(--primary); font-weight: 600;">MixStyle (ضد نویز دوربین)</span>
-                        <span class="arena-tag" style="color: var(--primary); font-weight: 600;">CB-ArcFace (حامی گونه‌های نادر)</span>
-                        <span class="arena-tag" style="color: var(--primary); font-weight: 600;">Spherical-TTA</span>
-                    </div>
-
-                    <!-- v4 Status Card -->
-                    <div id="status-card-v4" class="status-card in-group" style="margin-bottom: 0.5rem; padding: 0.75rem 1rem;">
-                        <div class="status-card-icon" id="status-card-icon-v4" style="font-size: 1.15rem;"><i class="fa-solid fa-circle-check"></i></div>
-                        <div class="status-card-body">
-                            <h4 id="status-title-v4" style="font-size: 0.85rem;">عضو قطعی ۵۷ گونه هدف</h4>
-                            <p id="status-desc-v4" style="font-size: 0.78rem;">تشخیص پایدار و مقاوم به شرایط نوری و دوربین</p>
-                        </div>
-                    </div>
-
-                    <!-- v4 Primary Match -->
-                    <div class="primary-match-card" style="padding: 1rem; margin-bottom: 0.75rem; border-color: #bae6fd; background: #f0f9ff;">
-                        <div>
-                            <div class="match-species-title" data-i18n="closest_species_label" style="color: #0369a1;">گونه پیشنهادی v4:</div>
-                            <div id="predicted-class-v4" class="match-species-name" style="font-size: 1.15rem; color: #0c4a6e;">-</div>
-                        </div>
-                        <div class="match-confidence-badge" style="font-size: 0.95rem; padding: 0.35rem 0.8rem; color: #0284c7; border-color: #7dd3fc;">
-                            <i class="fa-solid fa-shield-halved"></i>
-                            <span id="predicted-sim-v4">-%</span>
-                        </div>
-                    </div>
-
-                    <!-- v4 Top 5 Bars -->
-                    <div class="similarity-chart" style="margin-bottom: 0;">
-                        <h4 style="font-size: 0.85rem;"><i class="fa-solid fa-bars-staggered" style="color: var(--primary);"></i> ۵ گونه برتر در دامنه کامل v4</h4>
-                        <div id="bars-v4" class="bars-list"></div>
-                    </div>
-
-                    <div style="font-size: 0.75rem; color: var(--text-muted); text-align: left; margin-top: auto; padding-top: 0.5rem; border-top: 1px dashed #e2e8f0;">
-                        <i class="fa-regular fa-clock"></i> زمان پردازش v4 (با TTA چندزاویه): <strong id="time-v4">-</strong>
-                    </div>
-                </div>
-
             </div>
 
-            <!-- Comparative Visual Deck (4-View Comparison) -->
+            <!-- Primary Identified Species Card (Full Untruncated Name) -->
+            <div class="primary-match-card">
+                <div>
+                    <div class="match-species-title" data-i18n="closest_species_label">گونه پیشنهادی مدل:</div>
+                    <div id="predicted-class" class="match-species-name">-</div>
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    <div class="match-confidence-badge">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span id="predicted-sim">-%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tri-Card Visual Inspection Deck -->
             <div class="visual-deck">
                 <div class="deck-header">
-                    <h4><i class="fa-solid fa-eye" style="color: var(--primary);"></i> <span data-i18n="visual_deck_title">ارزیابی بینایی ماشین و تمرکز زیستی مقایسه‌ای</span></h4>
-                    <p data-i18n="visual_deck_desc">مقایسه مستقیم تمرکز گرادیان Grad-CAM بین نسخه ۳ (پایه) و نسخه ۴ (مقاوم به دوربین و متمرکز بر خطوط رشد)</p>
+                    <h4><i class="fa-solid fa-eye" style="color: var(--primary);"></i> <span data-i18n="visual_deck_title">ارزیابی بینایی ماشین و تمرکز زیستی</span></h4>
+                    <p data-i18n="visual_deck_desc">بررسی همزمان میکروگراف ورودی، کادر تفکیک پولک (HUD) و نقشه توجه گرادیان (Grad-CAM):</p>
                 </div>
 
-                <div class="deck-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+                <div class="deck-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
                     <div class="deck-item">
                         <span data-i18n="deck_input">میکروگراف ورودی</span>
                         <img id="input-scale-display" src="" alt="Input Scale">
@@ -270,79 +219,205 @@
                         <span data-i18n="deck_hud">مکان‌یابی کادر پولک (HUD)</span>
                         <img id="crop-overlay-img" src="" alt="Scale Localization HUD">
                     </div>
-                    <div id="gradcam-box-v3" class="deck-item">
-                        <span>تمرکز مدل v3 (Baseline Grad-CAM)</span>
-                        <img id="gradcam-v3-img" src="" alt="v3 Grad-CAM">
-                    </div>
-                    <div id="gradcam-box-v4" class="deck-item" style="border: 2px solid #bae6fd;">
-                        <span style="color: var(--primary); font-weight: 700;">تمرکز مدل v4 (MixStyle Grad-CAM)</span>
-                        <img id="gradcam-v4-img" src="" alt="v4 Grad-CAM">
+                    <div id="gradcam-box" class="deck-item" style="border: 2px solid #bae6fd;">
+                        <span style="color: var(--primary); font-weight: 700;" data-i18n="deck_gradcam">تمرکز تشخیصی (Grad-CAM)</span>
+                        <img id="gradcam-img" src="" alt="AquaLens v4 Grad-CAM">
                     </div>
                 </div>
+            </div>
+
+            <!-- Top 5 Morphological Matches (Two-Line Layout) -->
+            <div class="similarity-chart">
+                <h4><i class="fa-solid fa-bars-staggered" style="color: var(--primary);"></i> <span data-i18n="top5_heading">۵ گونه برتر با بیشترین تشابه ساختاری</span></h4>
+                <div id="bars-container" class="bars-list">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Active Learning & Expert Feedback Card -->
+            <div class="feedback-card">
+                <h4><i class="fa-solid fa-graduation-cap" style="color: var(--primary);"></i> <span data-i18n="feedback_title">اعتبارسنجی تخصصی (Active Learning)</span></h4>
+                <p data-i18n="feedback_desc">آیا گونه شناسایی‌شده مورد تایید زیست‌شناس / تاکسونومیست است؟ تایید یا اصلاح شما به بازتنظیم برخط مدل کمک می‌کند.</p>
+                
+                <div class="feedback-actions">
+                    <button id="btn-confirm-pred" class="btn-confirm" onclick="submitFeedback('confirmed')">
+                        <i class="fa-solid fa-check"></i> <span data-i18n="btn_confirm">تایید تشخیص (Confirm)</span>
+                    </button>
+                    <button id="btn-correct-pred" class="btn-correct" onclick="toggleCorrectionDrawer()">
+                        <i class="fa-solid fa-pen-to-square"></i> <span data-i18n="btn_correct">اصلاح گونه (Correct Label)</span>
+                    </button>
+                    <button id="btn-sync-now" class="btn-nav-al" style="margin-inline-start: auto;" onclick="triggerOnlineSync()">
+                        <i class="fa-solid fa-arrows-rotate"></i> <span data-i18n="btn_sync">همگام‌سازی برخط پیش‌نمونه‌ها (Sync EMA)</span>
+                    </button>
+                </div>
+
+                <!-- Correction Dropdown Drawer -->
+                <div id="correction-drawer" class="correction-drawer hidden">
+                    <label data-i18n="select_correct_label">گونه صحیح زیستی را از میان ۵۷ گونه انتخاب نمایید:</label>
+                    <div class="correction-input-group">
+                        <select id="correct-species-select" class="correction-select">
+                            {% for sp in species_list %}
+                                <option value="{{ sp }}">{{ sp }}</option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn-submit-correction" onclick="submitFeedback('corrected')">
+                            <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="btn_save_correction">ثبت اصلاحیه</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Feedback Status Message -->
+                <div id="feedback-msg" class="feedback-msg hidden"></div>
             </div>
 
         </section>
 
         <!-- App Footer -->
         <footer class="app-footer">
-            <p>AquaLens AI &bull; Version Comparison Arena (v3 vs v4) &bull; Developed by <strong>Najmeh Sabbah</strong>, <strong>Poorya Saneei</strong>, et al.</p>
+            <p>AquaLens AI v4 &bull; 57-Species Fish Scale Microstructure Biometrics &bull; Developed by <strong>Najmeh Sabbah</strong>, <strong>Poorya Saneei</strong>, et al.</p>
             <p style="margin-top: 0.25rem;">University of Guilan &bull; Iran University of Science and Technology (IUST)</p>
         </footer>
     </main>
 
-    <!-- Core Bilingual JS & Arena Comparison Logic -->
+    <!-- Active Learning Statistics Modal -->
+    <div id="al-modal" class="al-modal hidden">
+        <div class="al-modal-overlay" onclick="closeALModal()"></div>
+        <div class="al-modal-card">
+            <div class="al-modal-header">
+                <h3><i class="fa-solid fa-graduation-cap" style="color: var(--primary);"></i> <span data-i18n="al_modal_title">داشبورد یادگیری فعال برخط (Active Learning)</span></h3>
+                <button class="al-modal-close" onclick="closeALModal()">&times;</button>
+            </div>
+            <div class="al-modal-body">
+                <div class="al-stats-grid">
+                    <div class="al-stat-box">
+                        <span class="al-stat-number" id="modal-stat-total">-</span>
+                        <span class="al-stat-label" data-i18n="al_stat_total">کل نمونه‌های اعتبارسنجی‌شده</span>
+                    </div>
+                    <div class="al-stat-box">
+                        <span class="al-stat-number" id="modal-stat-confirmed" style="color: var(--success);">-</span>
+                        <span class="al-stat-label" data-i18n="al_stat_confirmed">تایید قطعی متخصص</span>
+                    </div>
+                    <div class="al-stat-box">
+                        <span class="al-stat-number" id="modal-stat-corrected" style="color: var(--warning);">-</span>
+                        <span class="al-stat-label" data-i18n="al_stat_corrected">نمونه‌های تصحیح‌شده</span>
+                    </div>
+                    <div class="al-stat-box">
+                        <span class="al-stat-number" id="modal-stat-active-species" style="color: var(--primary);">-</span>
+                        <span class="al-stat-label" data-i18n="al_stat_species">گونه‌های به‌روزرسانی‌شده</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-secondary); background: #f8fafc; border: 1px solid var(--card-border); padding: 0.85rem; border-radius: var(--radius-sm);">
+                    <i class="fa-solid fa-clock-rotate-left"></i> <span data-i18n="last_sync_label">آخرین زمان همگام‌سازی پیش‌نمونه‌ها:</span>
+                    <strong id="modal-stat-sync" style="color: var(--text-primary); margin-inline-start: 0.35rem;">-</strong>
+                </div>
+
+                <div style="margin-top: 1.25rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                    <button class="btn-sample" onclick="triggerOnlineSync()">
+                        <i class="fa-solid fa-arrows-rotate"></i> <span data-i18n="btn_sync_now">همگام‌سازی آنی با prototypes.pth</span>
+                    </button>
+                    <button class="btn-reset" onclick="closeALModal()">
+                        <span data-i18n="btn_close">بستن</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Bilingual JS & Application Engine -->
     <script>
         const i18n = {
             fa: {
-                hero_title: "مقایسه همزمان سامانه‌های هوشمند شناسایی پولک ماهیان",
-                hero_desc: "آزمایشگاه مقایسه‌ای عملکرد هوش مصنوعی بین نسخه ۳ (پایه ۴۰ گونه) و نسخه ۴ (مقاوم به دوربین و سنسور + ۵۷ گونه)",
-                mode_compare: "مقایسه همزمان v3 در برابر v4 (Side-by-Side Arena)",
-                mode_v4: "نسخه ۴ به تنهایی (۵۷ گونه + MixStyle)",
-                mode_v3: "نسخه ۳ به تنهایی (۴۰ گونه پایه)",
+                hero_title: "سامانه هوشمند شناسایی ریزساختار پولک ماهیان (نسخه ۴)",
+                hero_desc: "شناسایی زیستی دقیق ۵۷ گونه با یادگیری ژرف مقاوم به نویز دوربین و تنوع نوری (MixStyle + CB-ArcFace + Spherical-TTA)",
+                tag_mixstyle: "مقاوم به نوع دوربین و لنز (MixStyle)",
+                tag_cbarcface: "حامی گونه‌های نادر (CB-ArcFace)",
+                tag_tta: "تطابق کروی چندزاویه (Spherical-TTA)",
+                tag_species: "۵۷ گونه زیستی دریای جنوب",
                 upload_heading: "تصویر میکروسکوپی پولک را بکشید و رها کنید",
                 upload_subheading: "یا برای انتخاب فایل از حافظه دستگاه اینجا کلیک نمایید",
                 autocrop_label: "برش هوشمند پولک (حذف پس‌زمینه و حواشی لام)",
                 sample_btn: "امتحان با تصویر نمونه",
                 try_another: "انتخاب تصویر دیگر",
-                loading_text: "در حال تحلیل موازی روی هر دو مدل v3 و v4...",
-                gallery_title: "گونه‌های مرجع تحت پوشش",
-                gallery_desc: "چند نمونه از تصاویر میکروسکوپی استاندارد موجود در پایگاه داده جهت آزمون مقایسه‌ای:",
-                all_species_btn: "مشاهده نام ۵۷ گونه v4",
+                loading_text: "در حال تحلیل ریزساختار و استخراج ویژگی‌های کروی v4...",
+                gallery_title: "پایگاه مرجع ۵۷ گونه زیستی",
+                gallery_desc: "چند نمونه از تصاویر میکروسکوپی استاندارد موجود در پایگاه داده جهت آزمون سریع:",
+                all_species_btn: "مشاهده لیست کامل ۵۷ گونه",
                 hide_species_btn: "بستن لیست گونه‌ها",
-                result_heading: "نتیجه ارزیابی و آنالیز مقایسه‌ای عملکرد",
-                closest_species_label: "نزدیک‌ترین گونه تشخیص‌داده‌شده:",
-                visual_deck_title: "ارزیابی بینایی ماشین و تمرکز زیستی مقایسه‌ای",
-                visual_deck_desc: "مقایسه مستقیم تمرکز گرادیان Grad-CAM بین نسخه ۳ (پایه) و نسخه ۴ (مقاوم به دوربین و متمرکز بر خطوط رشد)",
+                result_heading: "نتیجه شناسایی و تحلیل ریخت‌سنجی",
+                closest_species_label: "گونه پیشنهادی مدل:",
+                uncertainty_title: "توجه: لزوم بازبینی نمونه",
+                visual_deck_title: "ارزیابی بینایی ماشین و تمرکز زیستی",
+                visual_deck_desc: "بررسی همزمان میکروگراف ورودی، کادر تفکیک پولک (HUD) و نقشه توجه گرادیان (Grad-CAM):",
                 deck_input: "میکروگراف ورودی",
                 deck_hud: "مکان‌یابی کادر پولک (HUD)",
+                deck_gradcam: "تمرکز تشخیصی (Grad-CAM)",
+                top5_heading: "۵ گونه برتر با بیشترین تشابه ساختاری",
+                top_match_tag: "بیشترین تطابق",
+                feedback_title: "اعتبارسنجی تخصصی (Active Learning)",
+                feedback_desc: "آیا گونه شناسایی‌شده مورد تایید زیست‌شناس / تاکسونومیست است؟ تایید یا اصلاح شما به بازتنظیم برخط مدل کمک می‌کند.",
+                btn_confirm: "تایید تشخیص (Confirm)",
+                btn_correct: "اصلاح گونه (Correct Label)",
+                btn_sync: "همگام‌سازی برخط پیش‌نمونه‌ها (Sync EMA)",
+                select_correct_label: "گونه صحیح زیستی را از میان ۵۷ گونه انتخاب نمایید:",
+                btn_save_correction: "ثبت اصلاحیه",
+                al_nav_title: "یادگیری فعال",
+                al_modal_title: "داشبورد یادگیری فعال برخط (Active Learning)",
+                al_stat_total: "کل نمونه‌های اعتبارسنجی‌شده",
+                al_stat_confirmed: "تایید قطعی متخصص",
+                al_stat_corrected: "نمونه‌های تصحیح‌شده",
+                al_stat_species: "گونه‌های به‌روزرسانی‌شده",
+                last_sync_label: "آخرین زمان همگام‌سازی پیش‌نمونه‌ها:",
+                btn_sync_now: "همگام‌سازی آنی با prototypes.pth",
+                btn_close: "بستن"
             },
             en: {
-                hero_title: "Fish Scale Microstructure Comparative Biometrics",
-                hero_desc: "Comparative Evaluation Arena between v3 (40-Species Baseline) and v4 (Camera-Invariant + 57 Taxa)",
-                mode_compare: "Side-by-Side Arena (v3 vs v4)",
-                mode_v4: "AquaLens v4 Only (57 Taxa + MixStyle)",
-                mode_v3: "AquaLens v3 Only (40 Taxa Baseline)",
+                hero_title: "Fish Scale Microstructure Biometrics (AquaLens v4)",
+                hero_desc: "High-precision 57-species taxonomic identification with camera-invariant deep learning (MixStyle + CB-ArcFace + Spherical-TTA)",
+                tag_mixstyle: "Camera & Lens Invariant (MixStyle)",
+                tag_cbarcface: "Rare Taxa Protection (CB-ArcFace)",
+                tag_tta: "Multi-Angle Spherical-TTA (7 Views)",
+                tag_species: "57 Target Biological Taxa",
                 upload_heading: "Drag & Drop microscopic scale image here",
                 upload_subheading: "or click to browse image from your device",
                 autocrop_label: "Auto-crop Scale (Remove slide borders & background)",
                 sample_btn: "Try Sample Image",
                 try_another: "Try Another Image",
-                loading_text: "Running parallel multi-model inference (v3 and v4)...",
-                gallery_title: "Supported Reference Species",
+                loading_text: "Analyzing microstructure & hyperspherical embeddings...",
+                gallery_title: "Supported 57 Reference Species",
                 gallery_desc: "Representative microscopic scale samples from the ichthyological collection:",
-                all_species_btn: "View All 57 Species Names",
-                hide_species_btn: "Hide Species Names",
-                result_heading: "Comparative Morphological Analysis Result",
+                all_species_btn: "View All 57 Species List",
+                hide_species_btn: "Hide Species List",
+                result_heading: "Taxonomic Identification & Morphology Analysis",
                 closest_species_label: "Closest Identified Species:",
-                visual_deck_title: "Computer Vision & Biological Explainability Comparison",
-                visual_deck_desc: "Direct inspection of Grad-CAM biological focus between v3 (baseline) and v4 (camera-invariant)",
+                uncertainty_title: "Notice: Expert Review Recommended",
+                visual_deck_title: "Computer Vision & Biological Explainability",
+                visual_deck_desc: "Tri-view inspection of original micrograph, scale HUD detector, and Grad-CAM circuli focus:",
                 deck_input: "Input Micrograph",
                 deck_hud: "Scale Localization HUD",
+                deck_gradcam: "Diagnostic Focus (Grad-CAM)",
+                top5_heading: "Top 5 Morphologically Similar Taxa",
+                top_match_tag: "Top Match",
+                feedback_title: "Expert Validation (Active Learning)",
+                feedback_desc: "Does this classification align with taxonomic evaluation? Confirmation or correction adapts the prototypes in real time.",
+                btn_confirm: "Confirm Identification",
+                btn_correct: "Correct Species Label",
+                btn_sync: "Online EMA Prototype Sync",
+                select_correct_label: "Select the verified biological species from all 57 taxa:",
+                btn_save_correction: "Save Correction",
+                al_nav_title: "Active Learning",
+                al_modal_title: "Real-Time Active Learning Dashboard",
+                al_stat_total: "Total Verified Samples",
+                al_stat_confirmed: "Confirmed by Expert",
+                al_stat_corrected: "Corrected Labels",
+                al_stat_species: "Adapted Species",
+                last_sync_label: "Last Prototype Sync:",
+                btn_sync_now: "Sync Now with prototypes.pth",
+                btn_close: "Close"
             }
         };
 
         let currentLang = localStorage.getItem('aqualens_lang') || 'fa';
-        let currentMode = 'compare';
         let currentResultData = null;
 
         function setLanguage(lang) {
@@ -365,42 +440,16 @@
                 }
             });
 
+            // Update search placeholder
+            const searchInp = document.getElementById('species-search-input');
+            if (searchInp) {
+                searchInp.placeholder = (lang === 'fa') ? 'جستجو در میان ۵۷ نام علمی گونه‌ها...' : 'Search among all 57 species names...';
+            }
+
             if (currentResultData) {
                 displayResult(currentResultData);
             }
         }
-
-        function setMode(mode) {
-            currentMode = mode;
-            document.getElementById('mode-compare-btn').classList.toggle('active', mode === 'compare');
-            document.getElementById('mode-v4-btn').classList.toggle('active', mode === 'v4');
-            document.getElementById('mode-v3-btn').classList.toggle('active', mode === 'v3');
-
-            const colV3 = document.getElementById('col-v3');
-            const colV4 = document.getElementById('col-v4');
-            const consensusBanner = document.getElementById('consensus-banner');
-
-            if (mode === 'compare') {
-                colV3.classList.remove('hidden');
-                colV4.classList.remove('hidden');
-                if (currentResultData && currentResultData.consensus) {
-                    consensusBanner.classList.remove('hidden');
-                }
-            } else if (mode === 'v4') {
-                colV3.classList.add('hidden');
-                colV4.classList.remove('hidden');
-                consensusBanner.classList.add('hidden');
-            } else if (mode === 'v3') {
-                colV3.classList.remove('hidden');
-                colV4.classList.add('hidden');
-                consensusBanner.classList.add('hidden');
-            }
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            setLanguage(currentLang);
-        });
 
         // DOM Elements
         const dropZone = document.getElementById('drop-zone');
@@ -412,16 +461,34 @@
         const sampleBtn = document.getElementById('sample-btn');
         const autoCropCheckbox = document.getElementById('auto-crop-checkbox');
         const resultSection = document.getElementById('result-section');
-
-        // Collapsible species list
         const toggleSpeciesBtn = document.getElementById('toggle-species-btn');
         const fullSpeciesList = document.getElementById('full-species-list');
+        const speciesSearchInput = document.getElementById('species-search-input');
+        const speciesChipsWrapper = document.getElementById('species-chips-wrapper');
 
+        document.addEventListener('DOMContentLoaded', () => {
+            setLanguage(currentLang);
+            fetchALStats();
+        });
+
+        // Toggle Full Species Drawer
         toggleSpeciesBtn.addEventListener('click', () => {
             const isHidden = fullSpeciesList.classList.toggle('hidden');
             const key = isHidden ? 'all_species_btn' : 'hide_species_btn';
             toggleSpeciesBtn.querySelector('span').textContent = i18n[currentLang][key];
         });
+
+        // Live Species Search Filter
+        if (speciesSearchInput) {
+            speciesSearchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase().trim();
+                const chips = speciesChipsWrapper.querySelectorAll('.species-chip');
+                chips.forEach(chip => {
+                    const name = chip.getAttribute('data-name').toLowerCase();
+                    chip.style.display = name.includes(term) ? 'inline-flex' : 'none';
+                });
+            });
+        }
 
         // Drag & Drop
         dropZone.addEventListener('click', () => fileInput.click());
@@ -462,7 +529,9 @@
             "{{ url_for('static', filename='samples/Lutjanus_johni_Bloch_1792.jpg') }}",
             "{{ url_for('static', filename='samples/Upeneus_sulphureusCuvier_1829.jpg') }}",
             "{{ url_for('static', filename='samples/Platycephalus_indicus_linnaeus_1758.jpg') }}",
-            "{{ url_for('static', filename='samples/Gerres_filamentosus_Cuvier1829.jpg') }}"
+            "{{ url_for('static', filename='samples/Gerres_filamentosus_Cuvier1829.jpg') }}",
+            "{{ url_for('static', filename='samples/Lutjanus_lutjanus_Bloch_1790.jpg') }}",
+            "{{ url_for('static', filename='samples/Scolopsis_vosmeri_Bloch_1792.jpg') }}"
         ];
 
         sampleBtn.addEventListener('click', async () => {
@@ -480,7 +549,7 @@
                 sampleBtn.disabled = true;
                 const response = await fetch(url);
                 const blob = await response.blob();
-                const file = new File([blob], 'sample_scale.jpg', { type: 'image/jpeg' });
+                const file = new File([blob], 'sample_micrograph.jpg', { type: 'image/jpeg' });
                 handleFile(file);
             } catch (err) {
                 console.error(err);
@@ -498,7 +567,6 @@
             const formData = new FormData();
             formData.append('file', file);
             formData.append('auto_crop', autoCropCheckbox.checked);
-            formData.append('mode', 'compare'); // always fetch both for instantaneous arena comparison
 
             try {
                 const response = await fetch('/predict', {
@@ -521,10 +589,12 @@
             }
         }
 
-        function createBarRow(className, sim, rank, isTop) {
+        /* Two-Line Layout for Top 5 Species */
+        function createBarRow(speciesName, sim, rank, isTop) {
             const card = document.createElement('div');
             card.className = isTop ? 'bar-card top-match' : 'bar-card';
 
+            // Line 1: Full untruncated species name and rank
             const header = document.createElement('div');
             header.className = 'bar-header';
 
@@ -534,8 +604,8 @@
 
             const nameSpan = document.createElement('span');
             nameSpan.className = 'bar-species-name';
-            nameSpan.textContent = className;
-            nameSpan.title = className;
+            nameSpan.textContent = speciesName;
+            nameSpan.title = speciesName;
 
             header.appendChild(rankBadge);
             header.appendChild(nameSpan);
@@ -548,6 +618,7 @@
                 header.appendChild(topTag);
             }
 
+            // Line 2: Similarity Track Fill + Percentage Badge
             const metricLine = document.createElement('div');
             metricLine.className = 'bar-metric-line';
 
@@ -558,10 +629,10 @@
             fill.className = 'bar-fill';
 
             let badgeClass = 'badge-low';
-            if (sim >= 75) {
+            if (sim >= 70) {
                 fill.style.background = 'linear-gradient(90deg, #059669, #0284c7)';
                 badgeClass = 'badge-high';
-            } else if (sim >= 60) {
+            } else if (sim >= 55) {
                 fill.style.background = 'linear-gradient(90deg, #d97706, #eab308)';
                 badgeClass = 'badge-mid';
             } else {
@@ -592,77 +663,205 @@
             currentResultData = data;
             const isFa = (currentLang === 'fa');
 
-            // 1. Consensus Banner
-            const consensusBanner = document.getElementById('consensus-banner');
-            const consensusIcon = document.getElementById('consensus-icon');
-            const consensusTitle = document.getElementById('consensus-title');
-            const consensusDesc = document.getElementById('consensus-desc');
+            // 1. Status Card
+            const statusCard = document.getElementById('status-card');
+            const statusIcon = document.getElementById('status-card-icon');
+            const statusTitle = document.getElementById('status-title');
+            const statusDesc = document.getElementById('status-desc');
 
-            if (data.consensus) {
-                consensusBanner.classList.remove('hidden');
-                if (data.consensus.agree) {
-                    consensusBanner.className = 'consensus-banner agree';
-                    consensusIcon.innerHTML = '<i class="fa-solid fa-check-double"></i>';
-                    consensusTitle.textContent = isFa ? 'همگرایی کامل هر دو مدل (Model Consensus)' : 'Complete Model Consensus';
-                    consensusDesc.innerHTML = isFa ? 
-                        `هر دو مدل به طور قاطع گونه <strong>«${data.consensus.v4_pred}»</strong> را تشخیص دادند (تشابه v3: ${data.consensus.v3_sim}٪ | تشابه v4: ${data.consensus.v4_sim}٪).` :
-                        `Both models independently identified <strong>'${data.consensus.v4_pred}'</strong> (v3 sim: ${data.consensus.v3_sim}% | v4 sim: ${data.consensus.v4_sim}%).`;
-                } else {
-                    consensusBanner.className = 'consensus-banner diverge';
-                    consensusIcon.innerHTML = '<i class="fa-solid fa-code-compare"></i>';
-                    consensusTitle.textContent = isFa ? 'اختلاف نظر تشخیصی بین دو نسخه (Diagnostic Divergence)' : 'Diagnostic Divergence Between Versions';
-                    consensusDesc.innerHTML = isFa ? data.consensus.verdict_desc_fa : data.consensus.verdict_desc_en;
-                }
+            statusCard.className = `status-card ${data.membership}`;
+            if (data.membership === 'in_group') {
+                statusIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+                statusTitle.textContent = isFa ? data.membership_title_fa : data.membership_title_en;
+                statusDesc.textContent = isFa ? data.membership_desc_fa : data.membership_desc_en;
+            } else if (data.membership === 'borderline') {
+                statusIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                statusTitle.textContent = isFa ? data.membership_title_fa : data.membership_title_en;
+                statusDesc.textContent = isFa ? data.membership_desc_fa : data.membership_desc_en;
             } else {
-                consensusBanner.classList.add('hidden');
+                statusIcon.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+                statusTitle.textContent = isFa ? data.membership_title_fa : data.membership_title_en;
+                statusDesc.textContent = isFa ? data.membership_desc_fa : data.membership_desc_en;
             }
 
-            // 2. v3 Column Populate
-            if (data.v3) {
-                document.getElementById('predicted-class-v3').textContent = data.v3.prediction;
-                document.getElementById('predicted-sim-v3').textContent = `${data.v3.overall_similarity}%`;
-                document.getElementById('time-v3').textContent = data.v3.execution_time;
-
-                const barsV3 = document.getElementById('bars-v3');
-                barsV3.innerHTML = '';
-                const sortedV3 = Object.entries(data.v3.top_matches).sort((a, b) => b[1] - a[1]);
-                sortedV3.forEach(([name, sim], idx) => {
-                    barsV3.appendChild(createBarRow(name, sim, idx + 1, idx === 0));
-                });
+            // 2. Uncertainty Notice
+            const uncBox = document.getElementById('uncertainty-box');
+            const uncDesc = document.getElementById('uncertainty-desc');
+            if (data.is_uncertain) {
+                uncBox.classList.remove('hidden');
+                uncDesc.textContent = data.uncertainty_reason;
+            } else {
+                uncBox.classList.add('hidden');
             }
 
-            // 3. v4 Column Populate
-            if (data.v4) {
-                document.getElementById('predicted-class-v4').textContent = data.v4.prediction;
-                document.getElementById('predicted-sim-v4').textContent = `${data.v4.overall_similarity}%`;
-                document.getElementById('time-v4').textContent = data.v4.execution_time;
+            // 3. Primary Prediction
+            document.getElementById('predicted-class').textContent = data.prediction;
+            const pctSign = isFa ? '٪' : '%';
+            document.getElementById('predicted-sim').textContent = `${data.overall_similarity}${pctSign}`;
+            document.getElementById('exec-time').textContent = isFa ? `زمان پردازش: ${data.execution_time}` : `Inference: ${data.execution_time}`;
 
-                const barsV4 = document.getElementById('bars-v4');
-                barsV4.innerHTML = '';
-                const sortedV4 = Object.entries(data.v4.top_matches).sort((a, b) => b[1] - a[1]);
-                sortedV4.forEach(([name, sim], idx) => {
-                    barsV4.appendChild(createBarRow(name, sim, idx + 1, idx === 0));
-                });
-            }
-
-            // 4. Visual Multi-View Deck
+            // 4. Visual Tri-Deck
             document.getElementById('input-scale-display').src = imagePreview.src;
-            if (data.v4 && data.v4.crop_overlay_image) {
-                document.getElementById('crop-overlay-img').src = data.v4.crop_overlay_image;
-            } else if (data.v3 && data.v3.crop_overlay_image) {
-                document.getElementById('crop-overlay-img').src = data.v3.crop_overlay_image;
+            if (data.crop_overlay_image) {
+                document.getElementById('crop-overlay-img').src = data.crop_overlay_image;
+            }
+            if (data.gradcam_image) {
+                document.getElementById('gradcam-img').src = data.gradcam_image;
             }
 
-            if (data.v3 && data.v3.gradcam_image) {
-                document.getElementById('gradcam-v3-img').src = data.v3.gradcam_image;
-            }
-            if (data.v4 && data.v4.gradcam_image) {
-                document.getElementById('gradcam-v4-img').src = data.v4.gradcam_image;
+            // 5. Top 5 Species List (Two-Line Layout)
+            const barsContainer = document.getElementById('bars-container');
+            barsContainer.innerHTML = '';
+            data.top_matches.forEach(item => {
+                barsContainer.appendChild(createBarRow(item.species_name, item.similarity, item.rank, item.rank === 1));
+            });
+
+            // 6. Reset Feedback Drawer
+            document.getElementById('correction-drawer').classList.add('hidden');
+            const fbMsg = document.getElementById('feedback-msg');
+            fbMsg.classList.add('hidden');
+            fbMsg.textContent = '';
+
+            // Set default correction select
+            const corrSelect = document.getElementById('correct-species-select');
+            if (corrSelect) {
+                corrSelect.value = data.prediction;
             }
 
-            setMode(currentMode);
             resultSection.classList.remove('hidden');
             resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Active Learning Actions
+        function toggleCorrectionDrawer() {
+            const drawer = document.getElementById('correction-drawer');
+            drawer.classList.toggle('hidden');
+        }
+
+        async function submitFeedback(status) {
+            if (!currentResultData) return;
+            const isFa = (currentLang === 'fa');
+
+            let confirmedSpecies = currentResultData.prediction;
+            if (status === 'corrected') {
+                confirmedSpecies = document.getElementById('correct-species-select').value;
+            }
+
+            const payload = {
+                sample_id: currentResultData.sample_id,
+                filename: currentResultData.filename,
+                status: status,
+                confirmed_species: confirmedSpecies
+            };
+
+            const fbMsg = document.getElementById('feedback-msg');
+            fbMsg.className = 'feedback-msg';
+            fbMsg.classList.remove('hidden');
+            fbMsg.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + (isFa ? 'در حال ثبت تاییدیه...' : 'Recording validation...');
+
+            try {
+                const res = await fetch('/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    fbMsg.style.background = '#ecfdf5';
+                    fbMsg.style.color = '#065f46';
+                    fbMsg.style.border = '1px solid #a7f3d0';
+                    fbMsg.innerHTML = `<i class="fa-solid fa-circle-check"></i> ` + 
+                        (isFa ? `گونه «${confirmedSpecies}» با موفقیت در پایگاه اعتبارسنجی ثبت شد.` : `Sample for '${confirmedSpecies}' successfully recorded.`);
+                    
+                    // Update badge
+                    if (data.stats) {
+                        updateALBadge(data.stats.total_verified);
+                    }
+                } else {
+                    fbMsg.style.background = '#fef2f2';
+                    fbMsg.style.color = '#991b1b';
+                    fbMsg.style.border = '1px solid #fecaca';
+                    fbMsg.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ` + (data.error || 'Failed to record feedback.');
+                }
+            } catch (err) {
+                console.error(err);
+                fbMsg.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Connection error.`;
+            }
+        }
+
+        async function triggerOnlineSync() {
+            const isFa = (currentLang === 'fa');
+            const fbMsg = document.getElementById('feedback-msg');
+            fbMsg.className = 'feedback-msg';
+            fbMsg.classList.remove('hidden');
+            fbMsg.style.background = '#f0f9ff';
+            fbMsg.style.color = '#0369a1';
+            fbMsg.style.border = '1px solid #bae6fd';
+            fbMsg.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + (isFa ? 'در حال بازتنظیم برخط پیش‌نمونه‌ها (EMA Sync)...' : 'Synchronizing prototypes via EMA in real-time...');
+
+            try {
+                const res = await fetch('/sync_al', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    fbMsg.style.background = '#ecfdf5';
+                    fbMsg.style.color = '#065f46';
+                    fbMsg.style.border = '1px solid #a7f3d0';
+                    fbMsg.innerHTML = `<i class="fa-solid fa-circle-check"></i> ` + 
+                        (isFa ? `همگام‌سازی انجام شد: ${data.synced_samples} نمونه در ${data.elapsed_time} اعمال گردید.` : data.message);
+                    
+                    if (data.stats) {
+                        updateALBadge(data.stats.total_verified);
+                        updateModalStats(data.stats);
+                    }
+                } else {
+                    fbMsg.style.background = '#fffbeb';
+                    fbMsg.style.color = '#92400e';
+                    fbMsg.style.border = '1px solid #fde68a';
+                    fbMsg.innerHTML = `<i class="fa-solid fa-circle-info"></i> ${data.error || data.message}`;
+                }
+            } catch (err) {
+                console.error(err);
+                fbMsg.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Sync failed.`;
+            }
+        }
+
+        // Active Learning Stats Modal
+        const alModal = document.getElementById('al-modal');
+        const openALBtn = document.getElementById('open-al-btn');
+
+        openALBtn.addEventListener('click', () => {
+            fetchALStats();
+            alModal.classList.remove('hidden');
+        });
+
+        function closeALModal() {
+            alModal.classList.add('hidden');
+        }
+
+        async function fetchALStats() {
+            try {
+                const res = await fetch('/al_stats');
+                const stats = await res.json();
+                if (stats) {
+                    updateALBadge(stats.total_verified || 0);
+                    updateModalStats(stats);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function updateALBadge(count) {
+            const badge = document.getElementById('nav-al-badge');
+            if (badge) badge.textContent = count;
+        }
+
+        function updateModalStats(stats) {
+            document.getElementById('modal-stat-total').textContent = stats.total_verified || 0;
+            document.getElementById('modal-stat-confirmed').textContent = stats.confirmed_count || 0;
+            document.getElementById('modal-stat-corrected').textContent = stats.corrected_count || 0;
+            document.getElementById('modal-stat-active-species').textContent = stats.active_species_count || 0;
+            document.getElementById('modal-stat-sync').textContent = stats.last_synced_at || 'Never';
         }
     </script>
 </body>

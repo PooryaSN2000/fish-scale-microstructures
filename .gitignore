@@ -49,9 +49,11 @@ v4/paper/
 # Temporary data, logs, uploads
 uploads/
 **/uploads/
+**/active_learning_data/verified_samples/
 *.log
 scratch/
 .system_generated/
 .idea/
 .vscode/
 .DS_Store
+
