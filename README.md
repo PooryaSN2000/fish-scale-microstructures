@@ -1,47 +1,49 @@
-# 🐟 Deep Metric Learning for Marine Fish Scale Microstructure Identification (AquaLens AI v3)
+# 🐟 AquaLens AI v4: Domain-Invariant Deep Metric Learning for 57-Species Marine Fish Scale Biometrics
 
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.x-EE4C2C.svg?style=flat&logo=pytorch)](https://pytorch.org)
 [![Backbone](https://img.shields.io/badge/Backbone-ConvNeXt--Tiny-00599C.svg)](https://arxiv.org/abs/2201.03545)
-[![Metric-Learning](https://img.shields.io/badge/Loss-ArcFace%20Margin-4B0082.svg)](https://arxiv.org/abs/1801.07698)
-[![Accuracy](https://img.shields.io/badge/Top--1%20Test%20Accuracy-91.89%25-brightgreen.svg)]()
-[![Precision](https://img.shields.io/badge/Weighted%20Precision-93.46%25-blue.svg)]()
-[![Explainability](https://img.shields.io/badge/XAI-Grad--CAM-blueviolet.svg)]()
-[![License](https://img.shields.io/badge/License-Academic-lightgrey.svg)]()
+[![Domain-Generalization](https://img.shields.io/badge/Domain%20Generalization-MixStyle-22c55e.svg)](https://arxiv.org/abs/2104.02008)
+[![Metric-Learning](https://img.shields.io/badge/Loss-Class--Balanced%20ArcFace-7c3aed.svg)]()
+[![Species](https://img.shields.io/badge/Species%20Coverage-57%20Taxa-0284c7.svg)]()
+[![Top-1 Accuracy](https://img.shields.io/badge/Top--1%20Test%20Accuracy-91.41%25-brightgreen.svg)]()
+[![Top-5 Accuracy](https://img.shields.io/badge/Top--5%20Test%20Accuracy-100.00%25-brightgreen.svg)]()
+[![Tail Few-Shot](https://img.shields.io/badge/Tail%20Few--Shot%20Accuracy-90.57%25-emerald.svg)]()
+[![Explainability](https://img.shields.io/badge/XAI-Localized%20Grad--CAM-f59e0b.svg)]()
+[![Active-Learning](https://img.shields.io/badge/Active%20Learning-Online%20EMA%20Sync-0ea5e9.svg)]()
 
-> **AquaLens AI v3** is an end-to-end, high-precision Deep Metric Learning framework designed for automated taxonomic classification of **40 marine fish species** via microscopic scale surface microstructures (*circuli*, *radii*, *focus*, and *ctenii*).
+> **AquaLens AI v4** is an end-to-end, high-precision Deep Metric Learning and Domain Generalization framework designed for automated taxonomic classification of **all 57 marine fish species** from the Persian Gulf and Sea of Oman using microscopic dermatoskeleton scale structures (*circuli*, *radii*, *focus*, and *ctenii*).
 
 ---
 
 ## 📑 Table of Contents
-1. [Scientific Motivation & Biological Background](#-scientific-motivation--biological-background)
-2. [Key Architecture & Technical Mechanism](#-key-architecture--technical-mechanism)
-   - [Contrast-Limited Adaptive Histogram Equalization (CLAHE)](#1-contrast-limited-adaptive-histogram-equalization-clahe)
-   - [ConvNeXt-Tiny Deep Feature Representation](#2-convnext-tiny-deep-feature-representation)
-   - [ArcFace Additive Angular Margin Metric Loss](#3-arcface-additive-angular-margin-metric-loss)
-   - [Sub-Center Multi-Cluster Prototypes ($K=2$)](#4-sub-center-multi-cluster-prototypes-k2)
-   - [5-Pass Test-Time Augmentation (TTA)](#5-5-pass-test-time-augmentation-tta)
-   - [Explainable AI via Grad-CAM](#6-explainable-ai-via-grad-cam)
-   - [Active Learning & Human-in-the-Loop Loop](#7-active-learning--human-in-the-loop-loop)
+1. [Overview & Biological Context](#-overview--biological-context)
+2. [Key Scientific Innovations in Version 4](#-key-scientific-innovations-in-version-4)
+   - [Domain Generalization via MixStyle (Sensor & Camera Invariance)](#1-domain-generalization-via-mixstyle)
+   - [Class-Balanced ArcFace (CB-ArcFace for Few-Shot Protection)](#2-class-balanced-arcface-cb-arcface)
+   - [Two-Stage Scale Saliency Localization (HUD)](#3-two-stage-scale-saliency-localization-hud)
+   - [7-View Spherical Test-Time Augmentation (Spherical-TTA)](#4-7-view-spherical-test-time-augmentation-spherical-tta)
+   - [Localized Grad-CAM Explainability](#5-localized-grad-cam-explainability)
+   - [Online Active Learning Engine (EMA Sync in < 1.5s)](#6-online-active-learning-engine)
 3. [Empirical Evaluation & Verified Results](#-empirical-evaluation--verified-results)
-4. [Visual Analytics & Diagnostic Figures](#-visual-analytics--diagnostic-figures)
-5. [Repository Structure](#-repository-structure)
-6. [Quick Start & Reproduction](#-quick-start--reproduction)
-   - [Installation](#1-installation)
-   - [Interactive Web Application](#2-interactive-web-application)
-   - [Evaluation Pipeline](#3-evaluation-pipeline)
-   - [Prototype Extraction & Training](#4-prototype-extraction--training)
-7. [Research Team & Citation](#-research-team--citation)
+4. [Repository Architecture](#-repository-architecture)
+5. [Quick Start & Usage](#-quick-start--usage)
+   - [Environment Setup](#1-environment-setup)
+   - [Launching the Laboratory Web Interface](#2-launching-the-laboratory-web-interface)
+   - [Running Model Evaluation](#3-running-model-evaluation)
+   - [Python API for Production Inference](#4-python-api-for-production-inference)
+6. [Research Team & Academic Affiliations](#-research-team--academic-affiliations)
 
 ---
 
-## 🔬 Scientific Motivation & Biological Background
+## 🔬 Overview & Biological Context
 
-Fish scales are specialized calcified dermatoskeleton structures exhibiting micro-morphological patterns that serve as reliable biometric identifiers for taxonomic classification, age determination, and fisheries stock assessment:
+Automated taxonomic identification of marine teleosts via scale surface microstructures represents a non-lethal, cost-effective biometric method for ecological monitoring and fisheries stock management.
 
-* **Circuli:** Concentric growth rings deposited chronologically around the scale center. Ring spacing, thickening, and bifurcation reflect physiological growth cycles and feeding conditions.
-* **Radii:** Radial grooves extending outward from the nucleus to the scale margins, facilitating flexibility and nutrient transport.
-* **Focus (Nucleus):** The primordial origin point of scale formation.
-* **Ctenii:** Fine, comb-like tooth structures located exclusively on the posterior field of *ctenoid* scales (e.g., Percoidei), absent in smooth *cycloid* scales (e.g., Clupeiformes).
+Fish scales possess distinct microstructures that encode species genetics, growth cycles, and environmental history:
+* **Circuli:** Concentric growth rings deposited chronologically around the scale focus.
+* **Radii:** Structural radial grooves extending outward from the nucleus to the margins.
+* **Focus (Nucleus):** The primordial center of initial scale calcification.
+* **Ctenii:** Comb-like spines localized on the posterior margin of ctenoid scales (e.g., Perciformes), absent in cycloid scales.
 
 ```
           [ Anterior Margin / Front Field ]
@@ -55,217 +57,144 @@ Fish scales are specialized calcified dermatoskeleton structures exhibiting micr
           [ Posterior Field ] ===> [ Ctenii Spines (Ctenoid) ]
 ```
 
-### Challenges in Microscopic Scale Identification:
-1. **Severe Class Imbalance:** Certain rare wild marine species have as few as 5–10 scale micrographs, whereas common commercial teleosts have over 50 specimens. Standard cross-entropy networks collapse under such few-shot imbalance.
-2. **High Intra-Species Variance:** Scale morphology differs depending on anatomical extraction location on the fish body (dorsal, ventral, or lateral line scales).
-3. **Fine-Grained Congeneric Overlap:** Closely related species within the same genus (e.g., *Lutjanus johni* vs. *Lutjanus lutjanus*, or *Epinephelus coioides* vs. *Epinephelus radiatus*) exhibit subtle microscopic differences easily obscured by microscope illumination variance.
-4. **Acquisition Artifacts:** Field micrographs frequently contain slide boundary lines, air bubbles, focus blur, glass scratches, and physical measurement grids.
+### The Long-Tail Few-Shot Challenge:
+In our 57-species marine database:
+- **Head Species ($\ge 20$ samples):** 3 dominant commercial taxa (e.g., *Lutjanus johni*, *Upeneus sulphureus*).
+- **Medium Species (10--19 samples):** 17 taxa.
+- **Tail / Few-Shot Species ($<10$ samples):** 37 species (64.9% of the database) having only 2 to 5 samples.
+
+Version 4 explicitly addresses this extreme imbalance, achieving **90.57% accuracy on the few-shot tail cohort** without pruning any species.
 
 ---
 
-## 🧠 Key Architecture & Technical Mechanism
+## 🧠 Key Scientific Innovations in Version 4
 
-AquaLens AI v3 resolves these challenges through an integrated metric learning pipeline:
-
-```
-[Raw Micrograph] ──> [CLAHE Equalization] ──> [Resize 336x336]
-                            │
-                            ▼
-              [ConvNeXt-Tiny Backbone] (7x7 Depthwise Convolutions)
-                            │
-                            ▼
-              [Projector Head] (LayerNorm -> Linear 768 -> 384)
-                            │
-                            ▼
-              [L2 Hyperspherical Normalization] (||z|| = 1)
-                            │
-      ┌─────────────────────┴──────────────────────┐
-      │ Training Phase                             │ Inference Phase
-      ▼                                            ▼
-[ArcFace Loss (s=30, m=0.35)]              [5-Pass TTA (4x Rot + Flip)]
-      │                                            │
-      ▼                                            ▼
-[Hyperspherical Margin Optimization]       [Sub-Center Cosine Matching (K=2)]
-                                                   │
-                                                   ├─> [3-Tier OOD Assessment]
-                                                   ├─> [Grad-CAM Visual Heatmap]
-                                                   └─> [Active Learning Validation]
-```
-
----
-
-### 1. Contrast-Limited Adaptive Histogram Equalization (CLAHE)
-Microscope illumination varies significantly across laboratory sessions. Standard global histogram equalization over-amplifies optical glare and background glass noise. 
-
-AquaLens v3 utilizes biological **CLAHE** on the luminance channel (L\* in CIELAB space) with a clip limit of $2.0$ over an $8 \times 8$ local contextual grid:
-$$\text{L}^*_{\text{enhanced}} = \text{CLAHE}(\text{L}^*, \text{clip}=2.0, \text{grid}=(8,8))$$
-The result is blended 50/50 with the original image, sharpening faint circuli ridges and ctenial spine borders without washing out delicate cellular structures.
-
-### 2. ConvNeXt-Tiny Deep Feature Representation
-Instead of legacy CNN backbones (e.g., ResNet-50) or pure Vision Transformers that require vast datasets, we deploy **ConvNeXt-Tiny**:
-* **$7 \times 7$ Depthwise Separable Convolutions:** Expands the effective receptive field to capture long-range circuli curvature and global scale geometry.
-* **Inverted Bottlenecks & LayerNorm:** Emulates Swin Transformer channel expansion while maintaining the sample efficiency and translation invariance of convolutional architectures.
-* **Input Resolution ($336 \times 336$):** A 2.25x increase in pixel density over standard $224 \times 224$ networks, preserving sub-micron ridge detail.
-
-### 3. ArcFace Additive Angular Margin Metric Loss
-Traditional Softmax cross-entropy optimizes Euclidean separable hyperplanes without enforcing compact intraclass variance. For fine-grained fish scale classification with few-shot species, this causes sample starvation and poor generalization.
-
-AquaLens v3 employs **ArcFace (Additive Angular Margin Loss)** on the 384-dimensional unit hypersphere:
-
-$$\mathcal{L}_{\text{ArcFace}} = -\frac{1}{N} \sum_{i=1}^N \log \frac{e^{s \cdot \cos(\theta_{y_i} + m)}}{e^{s \cdot \cos(\theta_{y_i} + m)} + \sum_{j \neq y_i} e^{s \cdot \cos\theta_j}}$$
-
-* **Unit Embedding Normalization:** Features $x_i$ and class weight vectors $W_j$ are strictly normalized: $\|x_i\|_2 = 1, \|W_j\|_2 = 1 \implies W_j^T x_i = \cos \theta_j$.
-* **Additive Angular Margin ($m = 0.35$ rad $\approx 20^\circ$):** Imposes an explicit geodesic angular penalty on the target class angle $\theta_{y_i}$, forcing intra-class embeddings into compact spherical clusters.
-* **Hypersphere Radius Scale ($s = 30.0$):** Scales the cosine logits to prevent gradient saturation and ensure steep softmax probabilities.
+AquaLens AI v4 integrates a modern metric learning pipeline engineered for robustness across varying laboratory cameras, lighting, and few-shot species:
 
 ```
- Euclidean Softmax Space               ArcFace Hypersphere Space
-    (Loose Boundaries)                   (Tight Angular Margin)
-
-        Class A                              Class A  (Margin m)
-     *  *   *                                /  * * *  \
-       *  *                                 /   * * *   \
-    -------------  <-- Boundary            |-------------| <--- Geodesic
-       o   o                                \   o o o   /       Separation
-     o   o   o                               \  o o o  /
-        Class B                              Class B
+[Raw Micrograph] 
+       │
+       ▼
+[Stage 1: Scale Saliency Localizer] ──> Extracts Scale Body (Removes Slide Glare)
+       │
+       ▼
+[Biological CLAHE Equalization] ────> Enhances Circuli / Radii Contours
+       │
+       ▼
+[ConvNeXt-Tiny + MixStyle] ─────────> Feature Representation with Sensor Invariance
+       │
+       ▼
+[Hyperspherical Projection Head] ───> 384-d L2 Normalized Vector on S^383
+       │
+       ├─────────────────────────────────┬─────────────────────────────────┐
+       ▼ (Training Phase)                ▼ (Inference Phase)               ▼ (Explainability)
+ [CB-ArcFace Dynamic Margin Loss]   [7-View Spherical-TTA]          [Localized Grad-CAM]
+ (m_c in [0.300, 0.468] rad)        (7-Angle/Scale Pooling)         (Circuli/Radii Focus)
+       │                                 │                                 │
+       ▼                                 ▼                                 ▼
+ [Minority Class Protection]        [Multi-Subcenter Matching]      [Taxonomic Validation]
 ```
 
-### 4. Sub-Center Multi-Cluster Prototypes ($K=2$)
-Scales harvested from different anatomical sectors of the same fish (e.g., thoracic, caudal peduncle, or lateral line) form distinct morphological sub-clusters. Forcing all scales of a species into a single mean prototype compromises classification accuracy.
+### 1. Domain Generalization via MixStyle
+Discrepancies in optical microscope sensors, condenser illumination, and white balance manifest as shifts in channel feature statistics. **MixStyle** probabilistically mixes feature channel mean and standard deviation between mini-batch instances during training:
+$$\mu_{\mathrm{mix}} = \lambda \mu(x) + (1-\lambda)\mu(\tilde{x}), \quad \sigma_{\mathrm{mix}} = \lambda \sigma(x) + (1-\lambda)\sigma(\tilde{x})$$
+$$x_{\mathrm{mix}} = \sigma_{\mathrm{mix}} \cdot \left(\frac{x - \mu(x)}{\sigma(x) + \epsilon}\right) + \mu_{\mathrm{mix}}$$
+This simulates synthetic optical sensor variations, preventing the network from overfitting to specific laboratory cameras.
 
-During offline prototype registration, we compute both the global centroid $\mu_c$ and **$K=2$ Sub-Center Prototypes** $\{c_{1,c}, c_{2,c}\}$ using spherical k-means clustering over augmented multi-angle scale features:
-$$\mathcal{S}(x, c) = \max \left( \cos(f_{\text{TTA}}(x), \mu_c), \max_{k \in \{1, \dots, K\}} \cos(f_{\text{TTA}}(x), c_{k,c}) \right)$$
+### 2. Class-Balanced ArcFace (CB-ArcFace)
+Conventional ArcFace applies a uniform angular margin $m$, causing dominant classes to encroach upon rare few-shot classes. **CB-ArcFace** introduces a sample-aware dynamic angular margin:
+$$m_c = m_{\mathrm{base}} + m_{\Delta} \left( 1 - \left(\frac{N_c}{N_{\max}}\right)^\gamma \right)$$
+where $m_{\mathrm{base}} = 0.300$ rad ($\approx 17.2^\circ$), $m_{\Delta} = 0.250$ rad, and $\gamma = 0.25$.
+- Dominant species receive a baseline margin ($m_c \approx 0.300$ rad).
+- Scarce few-shot species receive an aggressive margin ($m_c \approx 0.468$ rad $\approx 26.8^\circ$), enforcing hyper-compact clustering on the hypersphere.
 
-### 5. 5-Pass Test-Time Augmentation (TTA)
-Because microscopic slides can be placed on the stage at arbitrary orientations, single-crop inference introduces directional bias. AquaLens v3 extracts features across 5 deterministic transformations:
-$$f_{\text{TTA}}(x) = \text{Normalize}\left( \frac{1}{5} \left[ f(x_{0^\circ}) + f(x_{90^\circ}) + f(x_{180^\circ}) + f(x_{270^\circ}) + f(x_{\text{hflip}}) \right] \right)$$
-TTA stabilizes the feature embedding and increases test accuracy by $+3.78\%$ over single-view inference.
+### 3. Two-Stage Scale Saliency Localization (HUD)
+A deterministic biological localizer isolates the scale body prior to classification:
+1. Calculates Sobel high-frequency texture gradient (separating textured circuli from smooth slide glass).
+2. Estimates background illumination from 4-corner sampling.
+3. Fuses texture and background contrast ($60\% \text{ texture} + 40\% \text{ contrast}$).
+4. Applies adaptive Otsu thresholding and biological convex morphology (aspect ratio $< 3.8$).
+5. Adds an 8% safety padding and expands to a 1:1 square bounding box.
 
-### 6. Explainable AI via Grad-CAM
-To guarantee scientific validity and prevent the model from learning background artifacts (such as microscope millimeter scales or air bubbles), we integrate **Grad-CAM (Gradient-weighted Class Activation Mapping)** directly onto the final stage feature maps of ConvNeXt-Tiny:
-$$L^c_{\text{Grad-CAM}} = \text{ReLU}\left( \sum_k \alpha_k^c A^k \right), \quad \alpha_k^c = \frac{1}{Z} \sum_i \sum_j \frac{\partial Y^c}{\partial A_{i,j}^k}$$
-The activation maps confirm:
-* For **Ctenoid scales**, attention concentrates sharply on the posterior ctenial spines and apical teeth.
-* For **Cycloid scales**, attention focuses on the scale nucleus (*focus*) and concentric circuli density.
-* Background slide rulers, numbers, and glass scratches have zero gradient activation.
+### 4. 7-View Spherical Test-Time Augmentation (Spherical-TTA)
+During inference, each scale is projected across 7 complementary geometric views (canonical, horizontal flip, vertical flip, $180^\circ$, $90^\circ$, $270^\circ$, and 0.94x zoom). The multi-view vectors are summed and re-normalized on the unit hypersphere:
+$$\hat{\mathbf{z}}_{\mathrm{query}} = \frac{\sum_{k=1}^7 \mathbf{z}^{(k)}}{\left\| \sum_{k=1}^7 \mathbf{z}^{(k)} \right\|_2}$$
+Matching evaluates the highest cosine similarity against species prototypes and bodily sub-centers (capturing dorsal, lateral, and ventral scale variations).
 
-### 7. Active Learning & Human-in-the-Loop Loop
-The web application includes an Active Learning pipeline:
-* When a fishery biologist examines a slide, the interface displays the Top-5 closest matches, the similarity score, and the Grad-CAM heatmap.
-* The expert can confirm the classification with one click or select the correct species from a taxonomy dropdown.
-* Confirmed samples are automatically archived with metadata (timestamp, predicted class, expert class, similarity percentage) into `v3/webapp/active_learning_data/` for future incremental fine-tuning.
+### 5. Localized Grad-CAM Explainability
+Grad-CAM heatmaps are computed directly on the isolated scale bounding box rather than the uncropped slide. This confirms that the model's taxonomic predictions are strictly anchored to anatomical circuli, radii, and nuclear focus, rather than slide glass artifacts.
+
+### 6. Online Active Learning Engine
+Predictions with epistemic uncertainty prompt expert validation. Verified samples are integrated instantaneously via hyperspherical Exponential Moving Average (EMA, $\alpha=0.15$):
+$$\mathbf{p}_c^{\mathrm{new}} = \mathrm{Normalize}\left( (1 - \alpha)\mathbf{p}_c^{\mathrm{old}} + \alpha \hat{\mathbf{z}}_{\mathrm{sample}} \right)$$
+Synchronization with `prototypes.pth` executes in **under 1.2 seconds** without restarting the application server.
 
 ---
 
 ## 📊 Empirical Evaluation & Verified Results
 
-Evaluation conducted on a held-out test set of **185 scale micrographs across 40 marine species** (zero data leakage; stratified train/val/test split).
+Evaluation on the independent held-out test split of **163 micrographs across all 57 species**:
 
-### Quantitative Benchmark Progression:
+| Metric | Overall Score | Head Cohort ($\ge 20$) | Medium Cohort (10--19) | Tail / Few-Shot ($<10$) |
+| :--- | :---: | :---: | :---: | :---: |
+| **Top-1 Test Accuracy** | **91.41%** (149/163) | **95.45%** (21/22) | **86.36%** (19/22) | **90.57%** (48/53) |
+| **Top-3 Test Accuracy** | **98.77%** (161/163) | 100.00% | 95.45% | 100.00% |
+| **Top-5 Test Accuracy** | **100.00%** (163/163) | 100.00% | 100.00% | 100.00% |
+| **Weighted Precision** | **93.00%** | --- | --- | --- |
+| **Weighted Recall** | **91.41%** | --- | --- | --- |
+| **Weighted F1-Score** | **91.20%** | --- | --- | --- |
 
-| Architecture | Input Size | Preprocessing | Metric Head | Top-1 Accuracy | Weighted F1 | Weighted Precision | Macro Recall |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Baseline (ResNet50 + Softmax)** | $224 \times 224$ | Standard | Linear Cross-Entropy | 66.49% | 63.80% | 68.20% | 64.10% |
-| **Hybrid ProtoNet (v3.0)** | $288 \times 288$ | Standard | Cosine ProtoNet | 78.38% | 75.20% | 81.10% | 76.40% |
-| **ConvNeXt + ArcFace (v3.1)** | $288 \times 288$ | Standard | ArcFace ($s=30, m=0.35$) | 88.11% | 86.89% | 88.35% | 87.09% |
-| **AquaLens AI Full Pipeline (v3.2)** | **$336 \times 336$** | **CLAHE** | **ArcFace + Sub-Centers + TTA** | **91.89%** | **91.32%** | **93.46%** | **89.42%** |
-
-### Verified Summary Statistics (v3.2):
-* **Top-1 Accuracy:** **91.8919%** (170 correct out of 185 test samples).
-* **Weighted Precision:** **93.46%**
-* **Weighted Recall:** **91.89%**
-* **Weighted F1-Score:** **91.32%**
-* **Macro Recall:** **89.42%**
-* **Macro F1-Score:** **86.93%**
-* **Perfect Classification (100% F1):** Achieved on **22 out of 40 species** (including *Lutjanus johni*, *Platycephalus indicus*, *Upeneus sulphureus*, *Drepane punctata*, and *Ariomma indicum*).
-* **High Precision:** **38 out of 40 species** achieve precision $\ge 50\%$.
-* **Inference Latency:** $\sim 18\text{ ms}$ per scale on NVIDIA RTX 4050 Laptop GPU (with full 5-pass TTA and Grad-CAM generation).
+### Calibrated Membership Thresholds:
+- **In-Domain Match ($\ge 70.0\%$ similarity):** Definite identification within the 57 species database.
+- **Borderline ($55.0\% \le \text{similarity} < 70.0\%$):** Sibling species affinity or optical blur on circuli.
+- **Out-of-Distribution ($< 55.0\%$ similarity):** Non-target species or severe noise.
 
 ---
 
-## 📈 Visual Analytics & Diagnostic Figures
+## 📂 Repository Architecture
 
-The following publication-grade diagnostic figures (300 DPI) were generated from the final evaluation:
+The repository is structured around Version 4:
 
-### 1. Confusion Matrix (40 Marine Species)
-Highlights the clean diagonal dominance across all 40 species and verifies zero systematic misclassification:
-![Confusion Matrix](v3/checkpoints/confusion_matrix.png)
-
-### 2. Metric t-SNE Embedding Manifold
-Shows the 384-dimensional ArcFace hypersphere embeddings mapped to 2D space. Classes form isolated, tightly clustered biological manifolds:
-![Metric t-SNE](v3/checkpoints/metric_tsne.png)
-
-### 3. Grad-CAM Biological Explainability
-Direct visual proof that the deep network attends to valid anatomical structures (*ctenii*, *circuli*, *focus*) rather than slide ruler markings:
-![Grad-CAM Explainability](v3/checkpoints/gradcam_explainability.png)
-
-### 4. Per-Class Precision, Recall & F1-Score
-Performance metrics across each of the 40 individual marine species:
-![Class Performance](v3/checkpoints/class_performance.png)
-
-### 5. Multi-Class ROC & Precision-Recall Curves
-ROC curves (macro-average AUC = 0.984) and PR curves illustrating strong discrimination even on rare few-shot species:
-| ROC Curves | Precision-Recall Curves |
-| :---: | :---: |
-| ![ROC Curves](v3/checkpoints/roc_curves.png) | ![PR Curves](v3/checkpoints/pr_curves.png) |
-
----
-
-## 📁 Repository Structure
-
-The repository is organized cleanly around the production-ready Version 3 system:
-
-```text
-fish-scale-microstructures/
-├── README.md                          # Primary technical documentation & architecture guide
-├── requirements.txt                   # Root Python dependencies
-├── .gitignore                         # Strict exclusion rules (weights >100MB, dataset, local v1/v2)
-│
-└── v3/
-    ├── requirements.txt               # v3 specific Python dependencies
-    ├── README.md                      # Supplementary documentation for v3 sub-modules
-    │
-    ├── src/                           # Machine Learning core source code
-    │   ├── config.py                  # Hyperparameters (resolution, embedding dim, ArcFace margin)
-    │   ├── dataset.py                 # Dataset loader with biological CLAHE and caching
-    │   ├── model.py                   # FishArcNet architecture & ArcFace metric loss head
-    │   ├── train.py                   # Training loop with AMP, WeightedSampler, & gradient accumulation
-    │   ├── save_prototypes.py         # Multi-angle extraction & Sub-Center K-Means prototype builder
-    │   ├── inference.py               # Inference engine with 5-pass TTA & OOD rejection
-    │   ├── gradcam.py                 # Grad-CAM explainable AI engine
-    │   ├── scale_detector.py          # Morphological scale bounding-box segmenter
-    │   ├── dataset_analytics.py       # Dataset distribution analytics
-    │   ├── visualize_augmentations.py # Data augmentation visualizer
-    │   └── evaluate.py                # Scientific evaluation suite & 300 DPI figure generator
-    │
-    ├── webapp/                        # Full-stack Interactive Web Application
-    │   ├── app.py                     # Flask backend with /predict and /feedback endpoints
-    │   ├── templates/
-    │   │   └── index.html             # Responsive UI with Grad-CAM viewer & Active Learning card
-    │   ├── static/
-    │   │   ├── style.css              # Glassmorphic UI styles
-    │   │   └── samples/               # Sample scale images for instant browser testing
-    │   └── active_learning_data/      # Storage for expert-verified feedback & retraining logs
-    │       └── .gitkeep
-    │
-    └── checkpoints/                   # Evaluation results & inference prototypes
-        ├── prototypes.pth             # 40-species prototype & sub-center vectors (~184 KB)
-        ├── classification_report.txt  # Detailed precision, recall, and F1 per species
-        ├── confusion_matrix.png       # 300 DPI 40-class confusion matrix
-        ├── metric_tsne.png            # 300 DPI t-SNE hyperspherical embedding plot
-        ├── gradcam_explainability.png # 300 DPI visual explainability comparison
-        ├── roc_curves.png             # 300 DPI ROC curves
-        ├── pr_curves.png              # 300 DPI Precision-Recall curves
-        ├── class_performance.png      # 300 DPI per-class bar performance
-        └── training_history.png       # Training loss and validation accuracy curves
+```
+.
+├── v4/
+│   ├── src/
+│   │   ├── config.py                  # Global hyperparameters & device settings
+│   │   ├── model.py                   # FishScaleConvNeXtV4 with MixStyle integration
+│   │   ├── mixstyle.py                # Domain generalization feature-statistic mixing
+│   │   ├── loss.py                    # Class-Balanced ArcFace (CB-ArcFace)
+│   │   ├── dataset.py                 # Few-shot aware stratification & CLAHE
+│   │   ├── augmentations.py           # Fourier Domain (FDA) & sensor transforms
+│   │   ├── scale_detector.py          # Biological texture-saliency localizer (HUD)
+│   │   ├── gradcam.py                 # Localized Grad-CAM explainability
+│   │   ├── inference.py               # 7-View Spherical-TTA & prototype matching
+│   │   ├── train.py                   # Two-stage transfer training pipeline
+│   │   ├── evaluate.py                # Comprehensive 57-species test evaluation
+│   │   └── retrain_active_learning.py # Online EMA prototype sync engine
+│   ├── webapp/
+│   │   ├── app.py                     # Dedicated Flask production server
+│   │   ├── templates/index.html       # Minimalist laboratory UI (Bilingual FA/EN)
+│   │   ├── static/                    # CSS stylesheets & reference samples
+│   │   └── active_learning_data/      # Verified samples & feedback logs
+│   ├── checkpoints/
+│   │   ├── best_model.pth             # Model weights (ignored from git, 109MB)
+│   │   ├── prototypes.pth             # 57-species sub-center prototypes (tracked, 247KB)
+│   │   ├── classification_report.txt  # Full per-species test metrics
+│   │   └── confusion_matrix.png       # 57-species normalized confusion matrix
+│   └── paper/
+│       ├── research_paper.tex         # Complete IEEE conference LaTeX manuscript
+│       ├── research_paper.pdf         # Compiled 8-page academic paper
+│       └── img/                       # High-resolution publication figures
+├── requirements.txt                   # Production Python dependencies
+├── .gitignore                         # Configured exclusion rules
+└── README.md                          # Comprehensive documentation
 ```
 
 ---
 
-## 🚀 Quick Start & Reproduction
+## 🚀 Quick Start & Usage
 
-### 1. Installation
+### 1. Environment Setup
 
 ```bash
 # Clone the repository
@@ -273,68 +202,70 @@ git clone https://github.com/PooryaSN2000/fish-scale-microstructures.git
 cd fish-scale-microstructures
 
 # Create and activate virtual environment
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv myenv
+source myenv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
 ```
 
-### 2. Interactive Web Application
+### 2. Launching the Laboratory Web Interface
 
-Launch the Flask web server with integrated Grad-CAM and Active Learning:
+To start the dedicated AquaLens v4 laboratory web server:
 
 ```bash
-cd v3/webapp
-python app.py
+python3 v4/webapp/app.py
 ```
-Open your web browser and navigate to:
-👉 **`http://localhost:5001`**
+Open your browser and navigate to:
+**`http://localhost:5004`**
 
-#### Key Features in the Dashboard:
-* **Drag-and-Drop Microscope Scale Upload:** Accepts JPEG, PNG, and BMP scale images.
-* **Instant Demo Mode:** Click *Try a Sample Image* to test pre-loaded biological samples (*Lutjanus johni*, *Upeneus sulphureus*, *Platycephalus indicus*, etc.).
-* **3-Tier Group Membership:**
-  * 🟢 **Inside Target Group ($\ge 75\%$ similarity):** Confirmed high-confidence taxonomic identification.
-  * 🟡 **Borderline / Moderate Similarity ($60\% - 75\%$):** Warning for degraded scale or closely related congeneric species.
-  * 🔴 **Out of Group ($< 60\%$):** Clear out-of-distribution rejection.
-* **Grad-CAM Attention Map:** Inspect exactly which biological structures (*focus*, *circuli*, *ctenii*) guided the decision.
-* **Active Learning Feedback:** Confirm the species or submit an expert correction with one click to store data for continuous retraining.
+Key Web Interface Features:
+- **100% Focused on Version 4:** Clean, uncluttered laboratory layout.
+- **Bilingual (English & Persian):** Instant toggle with full RTL/LTR support.
+- **Two-Line Top-5 Presentation:** Line 1 displays the full unclipped scientific name; Line 2 displays similarity percentage and visual progress bar.
+- **Tri-View Visual Deck:** Simultaneous inspection of input micrograph, scale HUD bounding box, and localized Grad-CAM heatmap.
+- **Searchable 57-Species Directory:** Filter and explore reference taxa in real-time.
+- **Active Learning Panel:** Confirm or correct predictions and trigger online EMA prototype updates with one click.
 
-### 3. Evaluation Pipeline
+### 3. Running Model Evaluation
 
-To re-run the full 40-species quantitative benchmark and re-generate all 300 DPI figures:
+To benchmark the 57-species test set:
 
 ```bash
-cd v3
-python src/evaluate.py
-```
-This reads the test split, runs 5-pass TTA inference against the prototype centroids, prints the complete classification report, and saves all evaluation charts to `v3/checkpoints/`.
-
-### 4. Prototype Extraction & Training
-
-To re-generate the prototype centroids and sub-center vectors:
-```bash
-cd v3
-python src/save_prototypes.py
+python3 v4/src/evaluate.py
 ```
 
-To re-train the ConvNeXt-Tiny ArcFace network from scratch on your own dataset:
-```bash
-cd v3
-python src/train.py
+### 4. Python API for Production Inference
+
+```python
+import sys
+sys.path.insert(0, 'v4/src')
+from inference import FishClassifierV4
+
+# Initialize classifier with 7-View Spherical-TTA
+classifier = FishClassifierV4()
+
+# Predict species from an optical micrograph
+image_path = "v4/webapp/static/samples/Lutjanus_johni_Bloch_1792.jpg"
+pred_species, confidence, all_probs, sim, all_sims, meta = classifier.predict(
+    image_path, auto_crop=True, return_metadata=True
+)
+
+print(f"Identified Species:    {pred_species}")
+print(f"Similarity Percentage: {sim * 100:.1f}%")
+print(f"Inference Time:        {meta['execution_time']}")
+print(f"Uncertainty Flag:      {meta['is_uncertain']}")
+
+# Generate localized Grad-CAM explainability heatmap
+gradcam_base64 = classifier.explain(image_path, auto_crop=True)
 ```
 
 ---
 
-## 👥 Research Team & Citation
+## 👥 Research Team & Academic Affiliations
 
 * **Najmeh Sabbah** — Department of Biology, Faculty of Science, University of Guilan, Rasht, Iran
-* **Poorya Saneei** — School of Computer Engineering, Iran University of Science and Technology (IUST), Tehran, Iran
+* **Poorya Saneei** — Department of Computer Engineering, Iran University of Science and Technology, Tehran, Iran
 * **Nader Shabanipour** — Department of Biology, Faculty of Science, University of Guilan, Rasht, Iran
 * **Majid Askari Hesni** — Department of Biology, Faculty of Science, Shahid Bahonar University of Kerman, Kerman, Iran
-* **Mahdi Eftekhari** — Department of Computer Engineering, Faculty of Engineering, Shahid Bahonar University of Kerman, Kerman, Iran
-
----
-
-*For scientific inquiries or collaboration, please open an issue in this repository.*
+* **Mahdi Eftekhari** — Department of Computer Engineering, Shahid Bahonar University of Kerman, Kerman, Iran
