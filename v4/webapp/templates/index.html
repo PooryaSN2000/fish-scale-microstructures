@@ -113,12 +113,12 @@
         <section class="clean-card species-gallery-card">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
                 <div>
-                    <h3><i class="fa-solid fa-layer-group" style="color: var(--primary);"></i> <span data-i18n="gallery_title">پایگاه مرجع ۵۷ گونه زیستی</span></h3>
+                    <h3><i class="fa-solid fa-layer-group" style="color: var(--primary);"></i> <span data-i18n="gallery_title">پایگاه مرجع ۳۵ گونه زیستی</span></h3>
                     <p style="font-size: 0.83rem; color: var(--text-secondary);" data-i18n="gallery_desc">چند نمونه از تصاویر میکروسکوپی استاندارد موجود در پایگاه داده جهت آزمون سریع:</p>
                 </div>
                 <div style="display: flex; gap: 0.5rem;">
                     <button id="toggle-species-btn" class="btn-sample" style="font-size: 0.8rem;">
-                        <i class="fa-solid fa-list"></i> <span data-i18n="all_species_btn">مشاهده لیست کامل ۵۷ گونه</span>
+                        <i class="fa-solid fa-list"></i> <span data-i18n="all_species_btn">مشاهده لیست کامل ۳۵ گونه</span>
                     </button>
                 </div>
             </div>
@@ -151,10 +151,10 @@
                 </div>
             </div>
 
-            <!-- Collapsible & Filterable Full 57 Species Drawer -->
+            <!-- Collapsible & Filterable Full 35 Species Drawer -->
             <div id="full-species-list" class="hidden" style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px dashed var(--card-border);">
                 <div style="margin-bottom: 0.75rem;">
-                    <input type="text" id="species-search-input" placeholder="جستجو در میان ۵۷ نام علمی گونه‌ها..." style="width: 100%; padding: 0.55rem 0.85rem; border: 1px solid var(--card-border); border-radius: var(--radius-sm); font-size: 0.85rem;">
+                    <input type="text" id="species-search-input" placeholder="جستجو در میان ۳۵ نام علمی گونه‌ها..." style="width: 100%; padding: 0.55rem 0.85rem; border: 1px solid var(--card-border); border-radius: var(--radius-sm); font-size: 0.85rem;">
                 </div>
                 <div class="chips-container" id="species-chips-wrapper">
                     {% for sp in species_list %}
@@ -274,7 +274,7 @@
 
         <!-- App Footer -->
         <footer class="app-footer">
-            <p>AquaLens AI v4 &bull; 57-Species Fish Scale Microstructure Biometrics &bull; Developed by <strong>Najmeh Sabbah</strong>, <strong>Poorya Saneei</strong>, et al.</p>
+            <p>AquaLens AI v4 &bull; 35-Species Fish Scale Microstructure Biometrics &bull; Developed by <strong>Najmeh Sabbah</strong>, <strong>Poorya Saneei</strong>, et al.</p>
             <p style="margin-top: 0.25rem;">University of Guilan &bull; Iran University of Science and Technology (IUST)</p>
         </footer>
     </main>
@@ -329,20 +329,20 @@
         const i18n = {
             fa: {
                 hero_title: "سامانه هوشمند شناسایی ریزساختار پولک ماهیان (نسخه ۴)",
-                hero_desc: "شناسایی زیستی دقیق ۵۷ گونه با یادگیری ژرف مقاوم به نویز دوربین و تنوع نوری (MixStyle + CB-ArcFace + Spherical-TTA)",
+                hero_desc: "شناسایی زیستی دقیق ۳۵ گونه با یادگیری ژرف مقاوم به نویز دوربین و تنوع نوری (MixStyle + CB-ArcFace + Spherical-TTA)",
                 tag_mixstyle: "مقاوم به نوع دوربین و لنز (MixStyle)",
                 tag_cbarcface: "حامی گونه‌های نادر (CB-ArcFace)",
                 tag_tta: "تطابق کروی چندزاویه (Spherical-TTA)",
-                tag_species: "۵۷ گونه زیستی دریای جنوب",
+                tag_species: "۳۵ گونه زیستی دریای جنوب",
                 upload_heading: "تصویر میکروسکوپی پولک را بکشید و رها کنید",
                 upload_subheading: "یا برای انتخاب فایل از حافظه دستگاه اینجا کلیک نمایید",
                 autocrop_label: "برش هوشمند پولک (حذف پس‌زمینه و حواشی لام)",
                 sample_btn: "امتحان با تصویر نمونه",
                 try_another: "انتخاب تصویر دیگر",
                 loading_text: "در حال تحلیل ریزساختار و استخراج ویژگی‌های کروی v4...",
-                gallery_title: "پایگاه مرجع ۵۷ گونه زیستی",
+                gallery_title: "پایگاه مرجع ۳۵ گونه زیستی",
                 gallery_desc: "چند نمونه از تصاویر میکروسکوپی استاندارد موجود در پایگاه داده جهت آزمون سریع:",
-                all_species_btn: "مشاهده لیست کامل ۵۷ گونه",
+                all_species_btn: "مشاهده لیست کامل ۳۵ گونه",
                 hide_species_btn: "بستن لیست گونه‌ها",
                 result_heading: "نتیجه شناسایی و تحلیل ریخت‌سنجی",
                 closest_species_label: "گونه پیشنهادی مدل:",
@@ -359,7 +359,7 @@
                 btn_confirm: "تایید تشخیص (Confirm)",
                 btn_correct: "اصلاح گونه (Correct Label)",
                 btn_sync: "همگام‌سازی برخط پیش‌نمونه‌ها (Sync EMA)",
-                select_correct_label: "گونه صحیح زیستی را از میان ۵۷ گونه انتخاب نمایید:",
+                select_correct_label: "گونه صحیح زیستی را از میان ۳۵ گونه انتخاب نمایید:",
                 btn_save_correction: "ثبت اصلاحیه",
                 al_nav_title: "یادگیری فعال",
                 al_modal_title: "داشبورد یادگیری فعال برخط (Active Learning)",
@@ -373,20 +373,20 @@
             },
             en: {
                 hero_title: "Fish Scale Microstructure Biometrics (AquaLens v4)",
-                hero_desc: "High-precision 57-species taxonomic identification with camera-invariant deep learning (MixStyle + CB-ArcFace + Spherical-TTA)",
+                hero_desc: "High-precision 35-species taxonomic identification with camera-invariant deep learning (MixStyle + CB-ArcFace + Spherical-TTA)",
                 tag_mixstyle: "Camera & Lens Invariant (MixStyle)",
                 tag_cbarcface: "Rare Taxa Protection (CB-ArcFace)",
                 tag_tta: "Multi-Angle Spherical-TTA (7 Views)",
-                tag_species: "57 Target Biological Taxa",
+                tag_species: "35 Target Biological Taxa",
                 upload_heading: "Drag & Drop microscopic scale image here",
                 upload_subheading: "or click to browse image from your device",
                 autocrop_label: "Auto-crop Scale (Remove slide borders & background)",
                 sample_btn: "Try Sample Image",
                 try_another: "Try Another Image",
                 loading_text: "Analyzing microstructure & hyperspherical embeddings...",
-                gallery_title: "Supported 57 Reference Species",
+                gallery_title: "Supported 35 Reference Species",
                 gallery_desc: "Representative microscopic scale samples from the ichthyological collection:",
-                all_species_btn: "View All 57 Species List",
+                all_species_btn: "View All 35 Species List",
                 hide_species_btn: "Hide Species List",
                 result_heading: "Taxonomic Identification & Morphology Analysis",
                 closest_species_label: "Closest Identified Species:",
@@ -403,7 +403,7 @@
                 btn_confirm: "Confirm Identification",
                 btn_correct: "Correct Species Label",
                 btn_sync: "Online EMA Prototype Sync",
-                select_correct_label: "Select the verified biological species from all 57 taxa:",
+                select_correct_label: "Select the verified biological species from all 35 taxa:",
                 btn_save_correction: "Save Correction",
                 al_nav_title: "Active Learning",
                 al_modal_title: "Real-Time Active Learning Dashboard",
@@ -443,7 +443,7 @@
             // Update search placeholder
             const searchInp = document.getElementById('species-search-input');
             if (searchInp) {
-                searchInp.placeholder = (lang === 'fa') ? 'جستجو در میان ۵۷ نام علمی گونه‌ها...' : 'Search among all 57 species names...';
+                searchInp.placeholder = (lang === 'fa') ? 'جستجو در میان ۳۵ نام علمی گونه‌ها...' : 'Search among all 35 species names...';
             }
 
             if (currentResultData) {

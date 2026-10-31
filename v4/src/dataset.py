@@ -13,17 +13,34 @@ except ImportError:
     import config
     from augmentations import get_v4_transforms
 
+try:
+    import cv2
+    HAS_CV2 = True
+except ImportError:
+    HAS_CV2 = False
+
 def apply_clahe_preprocessing(img: Image.Image) -> Image.Image:
     """
     Biological contrast enhancement for fish scales.
     Sharpens fine circuli and radii while blending to avoid amplifying background noise.
+    Uses ultra-fast C++ OpenCV implementation when available.
     """
     if not getattr(config, "USE_CLAHE", False):
         return img
-    arr = np.array(img, dtype=np.float32) / 255.0
-    res = exposure.equalize_adapthist(arr, clip_limit=getattr(config, "CLAHE_CLIP", 0.015))
-    blended = (np.clip(0.5 * arr + 0.5 * res, 0.0, 1.0) * 255).astype(np.uint8)
-    return Image.fromarray(blended)
+    
+    if HAS_CV2:
+        arr = np.array(img)
+        lab = cv2.cvtColor(arr, cv2.COLOR_RGB2LAB)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        lab[:, :, 0] = clahe.apply(lab[:, :, 0])
+        res = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
+        blended = np.clip(0.5 * arr + 0.5 * res, 0, 255).astype(np.uint8)
+        return Image.fromarray(blended)
+    else:
+        arr = np.array(img, dtype=np.float32) / 255.0
+        res = exposure.equalize_adapthist(arr, clip_limit=getattr(config, "CLAHE_CLIP", 0.015))
+        blended = (np.clip(0.5 * arr + 0.5 * res, 0.0, 1.0) * 255).astype(np.uint8)
+        return Image.fromarray(blended)
 
 
 class FishScaleDatasetV4(Dataset):
@@ -110,6 +127,8 @@ class FishScaleDatasetV4(Dataset):
             if split == "train":
                 self.train_counts[class_idx] = len(selected_files)
 
+        self._cache = {}
+
     def __len__(self):
         return len(self.image_paths)
 
@@ -117,12 +136,16 @@ class FishScaleDatasetV4(Dataset):
         path = self.image_paths[idx]
         label = self.labels[idx]
 
-        with Image.open(path) as img:
-            img = img.convert('RGB')
-            if config.USE_CLAHE:
-                img = apply_clahe_preprocessing(img)
-            tensor_img = self.transform(img)
+        if path in self._cache:
+            img = self._cache[path]
+        else:
+            with Image.open(path) as raw_img:
+                img = raw_img.convert('RGB')
+                if config.USE_CLAHE:
+                    img = apply_clahe_preprocessing(img)
+                self._cache[path] = img
 
+        tensor_img = self.transform(img)
         return tensor_img, label, self.classes[label]
 
 

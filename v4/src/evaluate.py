@@ -65,7 +65,20 @@ def evaluate_v4_system():
 
                 # Extract embedding with Spherical-TTA
                 emb = classifier.extract_embedding(pil_img, use_tta=True)
-                sims = torch.mm(emb, classifier.prototypes.t()).squeeze(0).cpu().numpy()
+                sim_proto = torch.mm(emb, classifier.prototypes.t()).squeeze(0)
+                if classifier.subcenters is not None:
+                    max_sims = []
+                    for c_idx in range(len(classifier.class_names)):
+                        p_val = float(sim_proto[c_idx].item())
+                        subs = classifier.subcenters.get(c_idx, None)
+                        if subs is not None:
+                            sub_val = float(torch.mm(emb, subs.to(device).t()).max().item())
+                            max_sims.append(max(p_val, sub_val))
+                        else:
+                            max_sims.append(p_val)
+                    sims = np.array(max_sims)
+                else:
+                    sims = sim_proto.cpu().numpy()
 
                 ranked = np.argsort(sims)[::-1]
                 pred_top1 = ranked[0]

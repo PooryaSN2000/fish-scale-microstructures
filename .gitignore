@@ -29,6 +29,8 @@ scale fish/
 scale_fish/
 *.zip
 *.tar.gz
+*.tif
+*.tiff
 
 # Academic Paper Drafts, PDFs & LaTeX files (Excluded as requested)
 *.pdf

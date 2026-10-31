@@ -231,7 +231,7 @@ def run_training():
 
     ax2.plot(range(1, 31), history["val_acc"], label="Val Top-1 Accuracy", color="#059669", lw=2)
     ax2.plot(range(1, 31), history["val_top3"], label="Val Top-3 Accuracy", color="#6366f1", lw=2, linestyle=":")
-    ax2.set_title("Validation Accuracy (57 Species)", fontsize=11, fontweight="bold")
+    ax2.set_title(f"Validation Accuracy ({num_classes} Species)", fontsize=11, fontweight="bold")
     ax2.set_xlabel("Epoch (Stage 2)")
     ax2.set_ylabel("Accuracy (%)")
     ax2.grid(True, alpha=0.3)

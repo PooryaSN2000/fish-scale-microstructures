@@ -105,10 +105,10 @@ def predict():
 
         overall_sim = round(max(0.0, sim) * 100, 1)
 
-        # Calibrated membership thresholds based on 163-sample empirical test distribution
+        # Calibrated membership thresholds based on 142-sample empirical test distribution
         if overall_sim >= 70.0:
             membership = "in_group"
-            membership_title_fa = "عضو قطعی ۵۷ گونه هدف"
+            membership_title_fa = "عضو قطعی ۳۵ گونه هدف"
             membership_title_en = "Definite In-Domain Species Match"
             membership_desc_fa = "تشابه ساختاری ریزساختار پولک با پایگاه داده زیستی در سطح تطابق بالا و قطعی قرار دارد."
             membership_desc_en = "Scale microstructure demonstrates strong invariant alignment with the species prototype."
@@ -120,9 +120,9 @@ def predict():
             membership_desc_en = "Moderate similarity detected. Suggesting sibling taxon or optical blur on circuli."
         else:
             membership = "out_of_group"
-            membership_title_fa = "خارج از پایگاه ۵۷ گونه یا تصویر غیرپولک"
+            membership_title_fa = "خارج از پایگاه ۳۵ گونه یا تصویر غیرپولک"
             membership_title_en = "Out-of-Distribution / Non-Target Sample"
-            membership_desc_fa = "میزان تطابق کمتر از آستانه اطمینان است. احتمالاً نمونه خارج از ۵۷ گونه است."
+            membership_desc_fa = "میزان تطابق کمتر از آستانه اطمینان است. احتمالاً نمونه خارج از ۳۵ گونه است."
             membership_desc_en = "Similarity is below the confidence margin, indicating an out-of-domain fish species."
 
         genus = pred_species.split()[0] if pred_species else ""
@@ -152,7 +152,7 @@ def predict():
                 "Domain Invariance (MixStyle)",
                 "Class-Balanced ArcFace",
                 "7-View Spherical-TTA",
-                "57 Covered Biological Taxa",
+                "35 Covered Biological Taxa",
                 "Active Learning Ready"
             ]
         }
