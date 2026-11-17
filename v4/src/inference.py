@@ -253,3 +253,6 @@ class FishClassifierV4:
         except Exception as e:
             print(f"[GradCAM Warning] {e}")
             return None
+
+# Backwards compatibility alias
+FishClassifier = FishClassifierV4
