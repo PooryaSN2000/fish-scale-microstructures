@@ -130,7 +130,7 @@ class FishClassifierV4:
                 inp = self.transform(pil_img).unsqueeze(0).to(self.device)
                 return self.model(inp)
 
-    def predict(self, image_path: str, auto_crop: bool = True, return_metadata: bool = True):
+    def predict(self, image_path: str, auto_crop: bool = False, return_metadata: bool = True):
         """
         Performs high-reliability 57-species biometric identification on an input micrograph.
         """
