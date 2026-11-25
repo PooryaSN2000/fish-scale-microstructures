@@ -1,0 +1,26 @@
+{
+  "test_total": 49,
+  "test_correct": 48,
+  "test_accuracy_pct": 97.96,
+  "test_weighted_precision": 0.9847,
+  "test_weighted_recall": 0.9796,
+  "test_weighted_f1": 0.9807,
+  "test_macro_f1": 0.964,
+  "test_per_stage_f1": [
+    1.0,
+    0.963,
+    1.0,
+    0.8571,
+    1.0
+  ],
+  "test_per_stage_auc": [
+    1.0,
+    0.9959,
+    1.0,
+    0.9928,
+    1.0
+  ],
+  "all_total": 233,
+  "all_correct": 231,
+  "all_accuracy_pct": 99.14
+}

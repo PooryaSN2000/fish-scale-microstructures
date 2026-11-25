@@ -1,96 +1,100 @@
 import os
 import torch
-import numpy as np
-from torch.utils.data import DataLoader
+import torch.nn.functional as F
+from PIL import Image
 from torchvision.transforms import v2
 
 import config
-from dataset import FishScaleDataset
+from dataset import FishScaleDataset, apply_clahe_preprocessing
 from model import ProtoNet
+from features import extract_classical_features
+
+
+def extract_4view_tta_embedding(model, pil_img: Image.Image, base_transform, device, use_tta: bool = True, use_classical: bool = False):
+    """
+    Computes L2-normalized embedding averaged over 4 geometric views on the unit hypersphere.
+    """
+    if use_tta and not use_classical:
+        views = [
+            pil_img,
+            pil_img.transpose(Image.Transpose.FLIP_LEFT_RIGHT),
+            pil_img.transpose(Image.Transpose.FLIP_TOP_BOTTOM),
+            pil_img.rotate(90),
+        ]
+    else:
+        views = [pil_img]
+
+    batch_tensors = torch.stack([base_transform(v) for v in views]).to(device)
+    cf_tensor = None
+    if use_classical:
+        cfs = [extract_classical_features(v) for v in views]
+        cf_tensor = torch.tensor(cfs, dtype=torch.float32).to(device)
+
+    with torch.no_grad():
+        embs = model(batch_tensors, cf_tensor, stage=2)
+        embs_norm = F.normalize(embs, p=2, dim=-1)
+        mean_emb = F.normalize(embs_norm.mean(dim=0, keepdim=True), p=2, dim=-1)
+    return mean_emb
+
 
 def main():
     print(f"Using Device: {config.DEVICE}")
-    
-    # 1. Load dataset (Train Split only for prototypes)
-    train_dataset = FishScaleDataset(root_dir=config.ROOT_DIR, split="train", seed=config.RANDOM_SEED)
-    class_names = train_dataset.classes
-    print(f"Target classes: {class_names}")
-    
-    # 2. Load Model
-    classical_in_dim = 0
-    if config.USE_CLASSICAL:
-        _, _, sample_classical = train_dataset[0]
-        classical_in_dim = sample_classical.shape[0]
-        
-    model = ProtoNet(
-        backbone_name=config.BACKBONE,
-        use_pretrained=False,
-        embedding_dim=config.EMBEDDING_DIM,
-        use_classical=config.USE_CLASSICAL,
-        classical_in_dim=classical_in_dim,
-        classical_proj_dim=config.CLASSICAL_PROJ_DIM
-    )
-    
     model_path = os.path.join(config.CHECKPOINT_DIR, "best_model.pth")
     checkpoint = torch.load(model_path, map_location=config.DEVICE)
+    mcfg = checkpoint["config"]
+
+    use_clahe = mcfg.get("use_clahe", config.USE_CLAHE)
+    use_tta = mcfg.get("use_tta", config.USE_TTA)
+    use_classical = mcfg.get("use_classical", config.USE_CLASSICAL)
+    img_size = tuple(mcfg.get("image_size", config.IMAGE_SIZE))
+
+    # Extract prototypes ONLY from training split (no data leakage)
+    train_dataset = FishScaleDataset(root_dir=config.ROOT_DIR, split="train", seed=config.RANDOM_SEED, use_clahe=use_clahe)
+    class_names = train_dataset.classes
+
+    model = ProtoNet(
+        backbone_name=mcfg["backbone"],
+        use_pretrained=False,
+        embedding_dim=mcfg["embedding_dim"],
+        use_classical=use_classical,
+        classical_in_dim=mcfg.get("classical_in_dim", 0),
+        classical_proj_dim=mcfg.get("classical_proj_dim", config.CLASSICAL_PROJ_DIM),
+    ).to(config.DEVICE)
     model.load_state_dict(checkpoint["model_state_dict"])
-    model.to(config.DEVICE)
     model.eval()
-    
-    # Transforms
-    gpu_transforms = v2.Compose([
-        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+
+    base_transform = v2.Compose([
+        v2.Resize(img_size),
+        v2.ToImage(),
+        v2.ToDtype(torch.float32, scale=True),
+        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
-    
-    # 3. Extract all train embeddings
-    loader = DataLoader(train_dataset, batch_size=32, shuffle=False)
-    
-    all_embeddings = []
-    all_labels = []
-    
-    print("Extracting embeddings for all training images...")
-    with torch.no_grad():
-        for batch in loader:
-            if config.USE_CLASSICAL:
-                images, labels, classical_feats = batch
-                images = images.to(config.DEVICE)
-                classical_feats = classical_feats.to(config.DEVICE)
-                images = gpu_transforms(images)
-                
-                with torch.autocast(device_type=config.DEVICE.type if config.DEVICE.type != 'mac' else 'cpu', enabled=config.DEVICE.type=='cuda'):
-                    embs = model(images, classical_feats, stage=2)
-            else:
-                images, labels = batch
-                images = images.to(config.DEVICE)
-                images = gpu_transforms(images)
-                with torch.autocast(device_type=config.DEVICE.type if config.DEVICE.type != 'mac' else 'cpu', enabled=config.DEVICE.type=='cuda'):
-                    embs = model(images, stage=2)
-                    
-            all_embeddings.append(embs.cpu())
-            all_labels.append(labels)
-            
-    all_embeddings = torch.cat(all_embeddings, dim=0)
-    all_labels = torch.cat(all_labels, dim=0)
-    
-    # 4. Compute class prototypes
-    num_classes = len(class_names)
-    prototypes = torch.zeros(num_classes, all_embeddings.shape[-1])
-    
-    print("Computing prototypes...")
-    for class_idx in range(num_classes):
-        mask = (all_labels == class_idx)
-        class_embs = all_embeddings[mask]
-        prototypes[class_idx] = class_embs.mean(dim=0)
-        print(f"Class '{class_names[class_idx]}' prototype generated from {class_embs.size(0)} images.")
-        
-    # 5. Save prototypes
+
+    class_to_embs = {c: [] for c in range(len(class_names))}
+    for idx in range(len(train_dataset)):
+        pil_img = train_dataset.image_cache[idx]
+        lbl = train_dataset.labels[idx]
+        emb = extract_4view_tta_embedding(model, pil_img, base_transform, config.DEVICE, use_tta=use_tta, use_classical=use_classical)
+        class_to_embs[lbl].append(emb.cpu())
+
+    prototypes = []
+    for c in range(len(class_names)):
+        embs_c = torch.cat(class_to_embs[c], dim=0)
+        proto = F.normalize(embs_c.mean(dim=0, keepdim=True), p=2, dim=-1)
+        prototypes.append(proto)
+        print(f"Class '{class_names[c]}' prototype computed from {embs_c.size(0)} train samples.")
+
+    prototypes_tensor = torch.cat(prototypes, dim=0)
     save_path = os.path.join(config.CHECKPOINT_DIR, "prototypes.pth")
     torch.save({
-        "prototypes": prototypes.to(config.DEVICE),
-        "class_names": class_names
+        "prototypes": prototypes_tensor.to(config.DEVICE),
+        "class_names": class_names,
+        "use_clahe": use_clahe,
+        "use_tta": use_tta,
+        "image_size": img_size,
     }, save_path)
-    
-    print(f"Successfully saved {num_classes} prototypes to {save_path}")
+    print(f"Saved {len(class_names)} prototypes to {save_path}")
+
 
 if __name__ == "__main__":
     main()
