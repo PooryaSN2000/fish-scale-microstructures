@@ -43,12 +43,14 @@ def fourier_amplitude_swap(source_tensor, target_tensor, beta=0.08):
     # Swap low-frequency amplitude window
     amp_src[:, h1:h2, w1:w2] = amp_tgt[:, h1:h2, w1:w2]
 
-    # Reconstruct complex spectrum with original phase
+    # Reconstruct complex spectrum with original phase preserving normalized bounds
     fft_recombined = amp_src * torch.exp(1j * phase_src)
     fft_unshift = torch.fft.ifftshift(fft_recombined, dim=(-2, -1))
     reconstructed = torch.fft.ifft2(fft_unshift, dim=(-2, -1)).real
 
-    return reconstructed.clamp(0.0, 1.0)
+    lo = float(source_tensor.min().item())
+    hi = float(source_tensor.max().item())
+    return reconstructed.clamp(min(lo, -2.5), max(hi, 2.7))
 
 
 class CrossCameraAugmentation:

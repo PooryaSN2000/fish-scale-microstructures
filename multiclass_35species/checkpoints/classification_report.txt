@@ -1,14 +1,15 @@
-AquaLens v4 Final Evaluation Report
-Top-1: 97.89%, Top-3: 100.00%, Top-5: 100.00%
-Head Accuracy: 98.51%, Med Accuracy: 97.73%, Tail (Few-Shot): 96.77%
+AquaLens v4.1 Strictly Leakage-Free Evaluation Report (Train-Only Prototypes + ScaleDetector ROI)
+Top-1: 92.25%, Top-3: 95.07%, Top-5: 96.48%
+Weighted F1: 0.9118, Macro F1: 0.8717
+Head Accuracy: 97.78%, Med Accuracy: 86.11%, Tail (Few-Shot): 75.00%
 
                                                                  precision    recall  f1-score   support
 
                                Acanthopagrus Cuvieri(Day, 1878)       1.00      1.00      1.00         2
-                           Acanthopagrus latus (Houltuyn. 1782)       1.00      1.00      1.00         2
+                           Acanthopagrus latus (Houltuyn. 1782)       0.67      1.00      0.80         2
                                     Ariomma indicum (Day, 1871)       1.00      1.00      1.00         3
 Carangoides bajad orange gold spotted trevally( Forsskål, 1775)       1.00      1.00      1.00         2
-                                Drepane punctata(linnaeus,1758)       1.00      1.00      1.00         6
+                                Drepane punctata(linnaeus,1758)       1.00      0.83      0.91         6
                    Epinephelus chlorostigma(Valenciennes, 1829)       1.00      1.00      1.00         2
                             Epinephelus coioides(hamilton,1822)       1.00      1.00      1.00         2
                      Epinephelus diacanthus(Valenciennes, 1828)       1.00      1.00      1.00         2
@@ -16,30 +17,30 @@ Carangoides bajad orange gold spotted trevally( Forsskål, 1775)       1.00     
                                 Gerres filamentosus Cuvier,1829       0.86      1.00      0.92         6
                            Heniochus acuminatus(linnaeus, 1758)       1.00      1.00      1.00         4
                               Lethrinus crocineus (smith, 1959)       1.00      1.00      1.00         4
-                         Lethrinus microdon(Valenciennes, 1830)       1.00      1.00      1.00         2
-                                    Liza klunzingeri(Day, 1888)       1.00      1.00      1.00         2
-                                      Lutjanus johni Bloch 1792       1.00      1.00      1.00        20
-                      Lutjanus lemniscatus (Valenciennes, 1828)       1.00      1.00      1.00         4
+                         Lethrinus microdon(Valenciennes, 1830)       0.67      1.00      0.80         2
+                                    Liza klunzingeri(Day, 1888)       0.50      0.50      0.50         2
+                                      Lutjanus johni Bloch 1792       0.95      1.00      0.98        20
+                      Lutjanus lemniscatus (Valenciennes, 1828)       0.80      1.00      0.89         4
                                    Lutjanus lutjanus Bloch 1790       1.00      0.90      0.95        10
-                 Lutjanus malabaricus (Bloch & Schneider, 1801)       1.00      1.00      1.00         3
+                 Lutjanus malabaricus (Bloch & Schneider, 1801)       1.00      0.33      0.50         3
                         Nemipterus peronii (Valenciennes, 1830)       1.00      0.67      0.80         3
                                Otolithes ruber(schneider, 1801)       1.00      1.00      1.00         2
                        Parupeneus heptacanthus (Lacepede, 1802)       1.00      1.00      1.00         3
                              Platax orbicularis(Forsskal, 1775)       1.00      1.00      1.00         2
                          Platycephalus indicus (linnaeus, 1758)       1.00      1.00      1.00         7
                         Plectorhinchus schotaf (Forsskal, 1775)       1.00      1.00      1.00         4
-                           Pomadasus argenteus (Forsskal, 1775)       1.00      1.00      1.00         3
+                           Pomadasus argenteus (Forsskal, 1775)       0.50      0.33      0.40         3
                                    Saurida tumbil (Bloch, 1975)       1.00      1.00      1.00         3
-                        Scarus persicus (Randall & Bruce, 1983)       1.00      1.00      1.00         2
+                        Scarus persicus (Randall & Bruce, 1983)       0.67      1.00      0.80         2
                              Scolopsis taeniatus (cuvier. 1830)       0.80      1.00      0.89         4
                                 Scolopsis vosmeri (Bloch, 1792)       0.83      1.00      0.91         5
                                   Siganus javus(linnaeus, 1766)       1.00      0.50      0.67         2
-                                  Sillago attenuata McKay, 1985       1.00      1.00      1.00         2
+                                  Sillago attenuata McKay, 1985       0.00      0.00      0.00         2
                                 Sillago sihama (Forsskal, 1775)       1.00      1.00      1.00         3
-                      Sphyraena putnamiae Jordan and Seale,1905       1.00      1.00      1.00         2
+                      Sphyraena putnamiae Jordan and Seale,1905       0.67      1.00      0.80         2
                                      Trapon puta (Cuvier, 1829)       1.00      1.00      1.00         3
                                  Upeneus sulphureusCuvier, 1829       1.00      1.00      1.00        13
 
-                                                       accuracy                           0.98       142
-                                                      macro avg       0.99      0.97      0.98       142
-                                                   weighted avg       0.98      0.98      0.98       142
+                                                       accuracy                           0.92       142
+                                                      macro avg       0.88      0.89      0.87       142
+                                                   weighted avg       0.92      0.92      0.91       142

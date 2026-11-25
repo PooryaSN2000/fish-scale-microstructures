@@ -40,15 +40,15 @@ class FishScaleConvNeXtV4(nn.Module):
         # Remove default classification head
         self.backbone.classifier = nn.Identity()
 
-        # Hyperspherical Projection Head
+        # Hyperspherical Projection Head (LayerNorm avoids tiny-batch BN noise)
         self.projector = nn.Sequential(
             nn.Flatten(),
             nn.Linear(in_features, 512),
-            nn.BatchNorm1d(512),
+            nn.LayerNorm(512),
             nn.GELU(),
             nn.Dropout(p=0.2),
             nn.Linear(512, embedding_dim),
-            nn.BatchNorm1d(embedding_dim)
+            nn.LayerNorm(embedding_dim)
         )
 
     def extract_features(self, x):

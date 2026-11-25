@@ -1,0 +1,203 @@
+{
+  "robustness_stress_tests": {
+    "Clean Scale ROI (7-View TTA + Subcenters)": {
+      "correct": 131,
+      "total": 142,
+      "accuracy_pct": 92.25,
+      "top3_accuracy_pct": 95.07,
+      "tail_accuracy_pct": 75.0,
+      "mean_top1_sim": 0.9239
+    },
+    "Single-View ROI (No Spherical-TTA)": {
+      "correct": 129,
+      "total": 142,
+      "accuracy_pct": 90.85,
+      "top3_accuracy_pct": 94.37,
+      "tail_accuracy_pct": 75.0,
+      "mean_top1_sim": 0.9165
+    },
+    "Mean Prototype Only (No Subcenters)": {
+      "correct": 130,
+      "total": 142,
+      "accuracy_pct": 91.55,
+      "top3_accuracy_pct": 94.37,
+      "tail_accuracy_pct": 75.0,
+      "mean_top1_sim": 0.9203
+    },
+    "Full Uncropped Slide (With Rulers)": {
+      "correct": 131,
+      "total": 142,
+      "accuracy_pct": 92.25,
+      "top3_accuracy_pct": 95.07,
+      "tail_accuracy_pct": 68.75,
+      "mean_top1_sim": 0.9155
+    },
+    "Dark / Low-Gamma Sensor (g=1.45)": {
+      "correct": 125,
+      "total": 142,
+      "accuracy_pct": 88.03,
+      "top3_accuracy_pct": 94.37,
+      "tail_accuracy_pct": 75.0,
+      "mean_top1_sim": 0.9008
+    },
+    "Bright Warm CMOS Shift (g=0.72)": {
+      "correct": 131,
+      "total": 142,
+      "accuracy_pct": 92.25,
+      "top3_accuracy_pct": 95.07,
+      "tail_accuracy_pct": 75.0,
+      "mean_top1_sim": 0.919
+    },
+    "Optical Defocus Blur (r=1.2)": {
+      "correct": 132,
+      "total": 142,
+      "accuracy_pct": 92.96,
+      "top3_accuracy_pct": 95.07,
+      "tail_accuracy_pct": 75.0,
+      "mean_top1_sim": 0.9249
+    },
+    "Combined Unseen Microscope": {
+      "correct": 131,
+      "total": 142,
+      "accuracy_pct": 92.25,
+      "top3_accuracy_pct": 95.07,
+      "tail_accuracy_pct": 75.0,
+      "mean_top1_sim": 0.9239
+    },
+    "Scale-Masked Background Only": {
+      "correct": 8,
+      "total": 142,
+      "accuracy_pct": 5.63,
+      "top3_accuracy_pct": 22.54,
+      "tail_accuracy_pct": 6.25,
+      "mean_top1_sim": 0.7255
+    },
+    "ROI Interior Masked (Blank Center)": {
+      "correct": 28,
+      "total": 142,
+      "accuracy_pct": 19.72,
+      "top3_accuracy_pct": 43.66,
+      "tail_accuracy_pct": 25.0,
+      "mean_top1_sim": 0.7423
+    }
+  },
+  "congeneric_and_cohort_statistics": {
+    "intra_mean": 0.9106,
+    "intra_std": 0.1059,
+    "inter_mean": 0.4507,
+    "inter_std": 0.0915,
+    "margin": 0.4599,
+    "welch_t": 51.18,
+    "welch_p": 1.0797099958041091e-95,
+    "mannwhitney_p": 1.387540747951027e-89,
+    "cohen_d": 5.0,
+    "cohort_intra_means": {
+      "head": 0.9396,
+      "med": 0.8738,
+      "tail": 0.83
+    },
+    "ood_tif_samples": [
+      {
+        "file": "112-4+8.tif",
+        "max_sim": 0.7583,
+        "closest_species": "Lutjanus lemniscatus (Valenciennes, 1828)"
+      },
+      {
+        "file": "120-5-4.tif",
+        "max_sim": 0.7605,
+        "closest_species": "Saurida tumbil (Bloch, 1975)"
+      },
+      {
+        "file": "163-4-22.tif",
+        "max_sim": 0.7489,
+        "closest_species": "Drepane punctata(linnaeus,1758)"
+      }
+    ],
+    "ood_tif_mean_max_sim": 0.7559
+  },
+  "novel_species_fewshot_benchmark": {
+    "total_unseen_species_in_dataset": 21,
+    "total_unseen_specimens": 95,
+    "pre_registration_base_max_sim": 0.8068,
+    "shot_benchmarks": {
+      "1-shot": {
+        "k_shot": 1,
+        "novel_species_tested": 21,
+        "query_specimens": 74,
+        "open_set_top1_pct": 37.84,
+        "open_set_top3_pct": 63.51,
+        "novel_only_top1_pct": 47.3,
+        "mean_target_sim": 0.7749
+      },
+      "2-shot": {
+        "k_shot": 2,
+        "novel_species_tested": 20,
+        "query_specimens": 53,
+        "open_set_top1_pct": 47.17,
+        "open_set_top3_pct": 71.7,
+        "novel_only_top1_pct": 54.72,
+        "mean_target_sim": 0.802
+      },
+      "3-shot": {
+        "k_shot": 3,
+        "novel_species_tested": 17,
+        "query_specimens": 33,
+        "open_set_top1_pct": 51.52,
+        "open_set_top3_pct": 78.79,
+        "novel_only_top1_pct": 54.55,
+        "mean_target_sim": 0.8327
+      }
+    }
+  },
+  "cross_validation_kfold": {
+    "n_splits": 5,
+    "folds": [
+      {
+        "fold": 1,
+        "n_test": 161,
+        "top1_pct": 88.2,
+        "top3_pct": 93.79,
+        "macro_f1": 0.8262,
+        "weighted_f1": 0.8749
+      },
+      {
+        "fold": 2,
+        "n_test": 161,
+        "top1_pct": 92.55,
+        "top3_pct": 96.27,
+        "macro_f1": 0.8607,
+        "weighted_f1": 0.9119
+      },
+      {
+        "fold": 3,
+        "n_test": 161,
+        "top1_pct": 93.79,
+        "top3_pct": 96.89,
+        "macro_f1": 0.9056,
+        "weighted_f1": 0.935
+      },
+      {
+        "fold": 4,
+        "n_test": 161,
+        "top1_pct": 88.82,
+        "top3_pct": 96.89,
+        "macro_f1": 0.8595,
+        "weighted_f1": 0.8764
+      },
+      {
+        "fold": 5,
+        "n_test": 160,
+        "top1_pct": 93.75,
+        "top3_pct": 95.62,
+        "macro_f1": 0.9181,
+        "weighted_f1": 0.9364
+      }
+    ],
+    "mean_top1_pct": 91.42,
+    "std_top1_pct": 2.43,
+    "mean_top3_pct": 95.89,
+    "mean_macro_f1": 0.874,
+    "std_macro_f1": 0.0335,
+    "overall_oof_top1_pct": 91.42
+  }
+}

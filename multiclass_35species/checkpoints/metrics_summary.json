@@ -1,0 +1,29 @@
+{
+  "test_total": 142,
+  "test_correct": 131,
+  "top1_accuracy_pct": 92.25,
+  "top3_accuracy_pct": 95.07,
+  "top5_accuracy_pct": 96.48,
+  "weighted_precision": 0.9197,
+  "weighted_recall": 0.9225,
+  "weighted_f1": 0.9118,
+  "macro_precision": 0.8831,
+  "macro_recall": 0.8876,
+  "macro_f1": 0.8717,
+  "head_accuracy_pct": 97.78,
+  "head_counts": [
+    88,
+    90
+  ],
+  "med_accuracy_pct": 86.11,
+  "med_counts": [
+    31,
+    36
+  ],
+  "tail_accuracy_pct": 75.0,
+  "tail_counts": [
+    12,
+    16
+  ],
+  "mean_top1_sim": 0.9239
+}

@@ -8,7 +8,7 @@ This repository contains two complementary pipelines:
 
 | Directory | Scope | Backbone & Method | Web Port | Key Result |
 | :--- | :--- | :--- | :---: | :--- |
-| **`multiclass_35species/`** | **35 Marine Species** (804 micrographs, $\ge 7$ samples/species) | ConvNeXt-Tiny + MixStyle + CB-ArcFace + 7-View Spherical-TTA + Grad-CAM | `5004` | **97.89% Top-1** (100% Top-3/5, 96.77% Tail) |
+| **`multiclass_35species/`** | **35 Marine Species + Open-Set** (804 micrographs, $\ge 7$ samples/species; 21 unseen reserved) | `ScaleDetector` + ConvNeXt-Tiny + `MixStyle` + `FDA` + `CB-ArcFace` + 7-View Spherical-TTA | `5004` | **92.25% Top-1** (**95.07% Top-3**, **91.42% 5-Fold CV**) |
 | **`lutjanus_5species/`** | **5 *Lutjanus* Species** (233 micrographs, *Lutjanidae* case study) | `ScaleDetector` + ConvNeXt-Tiny + `MixStyle` + `FDA` + Episodic `ProtoNet` + 4-View Spherical-TTA | `5000` | **97.96% Test** (**94.40% 5-Fold CV**) |
 
 ## 📂 Structure
@@ -16,9 +16,9 @@ This repository contains two complementary pipelines:
 ```
 .
 ├── multiclass_35species/       # Main 35-species metric learning system & active learning UI
-│   ├── src/                    # Training, MixStyle, CB-ArcFace, HUD detector, Grad-CAM, inference
-│   ├── webapp/                 # Bilingual Flask web app (EN/FA)
-│   └── checkpoints/            # Prototypes, metrics, and plots (best_model.pth >100MB excluded)
+│   ├── src/                    # ScaleDetector, MixStyle, FDA, CB-ArcFace, benchmark, open-set AL, Grad-CAM
+│   ├── webapp/                 # Bilingual Flask web app + zero-retraining novel species UI + TIF support
+│   └── checkpoints/            # Train-only prototypes, generalization_stats.json & reports (best_model.pth excluded)
 ├── lutjanus_5species/          # Specialized 5-species Lutjanus case study
 │   ├── src/                    # ScaleDetector, MixStyle, FDA, ProtoNet, benchmark & Stage figures
 │   ├── webapp/                 # Flask demo web app

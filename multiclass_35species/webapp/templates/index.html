@@ -25,7 +25,7 @@
                 <div>
                     <div class="brand-title">
                         AquaLens AI
-                        <span class="version-tag">v4.0 &bull; ۵۷ گونه زیستی</span>
+                        <span class="version-tag" id="nav-version-tag">v4.1 &bull; <span class="dyn-sp-count">{{ species_count }}</span> گونه زیستی</span>
                     </div>
                 </div>
             </div>
@@ -53,7 +53,7 @@
         <!-- Minimal Hero Section -->
         <header class="hero-section">
             <h1 data-i18n="hero_title">سامانه هوشمند شناسایی ریزساختار پولک ماهیان</h1>
-            <p data-i18n="hero_desc">شناسایی زیستی دقیق ۵۷ گونه با یادگیری ژرف مقاوم به نویز دوربین و تنوع نوری (MixStyle + CB-ArcFace + Spherical-TTA)</p>
+            <p data-i18n="hero_desc">شناسایی زیستی دقیق با یادگیری ژرف مقاوم به نویز دوربین و قابلیت افزودن آنی گونه جدید (ScaleDetector + MixStyle + CB-ArcFace + Spherical-TTA)</p>
             
             <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
                 <span class="arena-tag" style="color: var(--primary); font-weight: 600; background: var(--primary-light); border: 1px solid var(--primary-border); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem;">
@@ -66,7 +66,7 @@
                     <i class="fa-solid fa-compass"></i> <span data-i18n="tag_tta">تطابق کروی چندزاویه (Spherical-TTA)</span>
                 </span>
                 <span class="arena-tag" style="color: #7c3aed; font-weight: 600; background: #f5f3ff; border: 1px solid #ddd6fe; padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem;">
-                    <i class="fa-solid fa-fish-fins"></i> <span data-i18n="tag_species">۵۷ گونه زیستی دریای جنوب</span>
+                    <i class="fa-solid fa-fish-fins"></i> <span data-i18n="tag_species">پوشش ۳۵+ گونه (Open-Set Few-Shot)</span>
                 </span>
             </div>
         </header>
@@ -79,8 +79,8 @@
                 </div>
                 <h3 data-i18n="upload_heading">تصویر میکروسکوپی پولک را بکشید و رها کنید</h3>
                 <p data-i18n="upload_subheading">یا برای انتخاب فایل از حافظه دستگاه اینجا کلیک نمایید</p>
-                <span class="file-formats">JPG, PNG, BMP (میکروگراف‌های نوری پولک)</span>
-                <input type="file" id="file-input" accept="image/*" hidden>
+                <span class="file-formats">JPG, PNG, BMP, TIF/TIFF (میکروگراف‌های نوری پولک)</span>
+                <input type="file" id="file-input" accept="image/*,.tif,.tiff" hidden>
             </div>
 
             <!-- Preview Container -->
@@ -175,7 +175,7 @@
             <div id="status-card" class="status-card in-group">
                 <div class="status-card-icon" id="status-card-icon"><i class="fa-solid fa-circle-check"></i></div>
                 <div class="status-card-body">
-                    <h4 id="status-title">عضو قطعی ۵۷ گونه هدف</h4>
+                    <h4 id="status-title">تطابق تاییدشده</h4>
                     <p id="status-desc">تطابق ساختاری در سطح بالا تایید شد.</p>
                 </div>
             </div>
@@ -246,6 +246,9 @@
                     <button id="btn-correct-pred" class="btn-correct" onclick="toggleCorrectionDrawer()">
                         <i class="fa-solid fa-pen-to-square"></i> <span data-i18n="btn_correct">اصلاح گونه (Correct Label)</span>
                     </button>
+                    <button id="btn-novel-sp" class="btn-correct" style="background: #f5f3ff; color: #6d28d9; border-color: #c4b5fd;" onclick="toggleNovelSpeciesDrawer()">
+                        <i class="fa-solid fa-plus"></i> <span data-i18n="btn_novel">ثبت گونه جدید (بدون آموزش)</span>
+                    </button>
                     <button id="btn-sync-now" class="btn-nav-al" style="margin-inline-start: auto;" onclick="triggerOnlineSync()">
                         <i class="fa-solid fa-arrows-rotate"></i> <span data-i18n="btn_sync">همگام‌سازی برخط پیش‌نمونه‌ها (Sync EMA)</span>
                     </button>
@@ -253,7 +256,7 @@
 
                 <!-- Correction Dropdown Drawer -->
                 <div id="correction-drawer" class="correction-drawer hidden">
-                    <label data-i18n="select_correct_label">گونه صحیح زیستی را از میان ۵۷ گونه انتخاب نمایید:</label>
+                    <label data-i18n="select_correct_label">گونه صحیح زیستی را از میان گونه‌های پایگاه انتخاب نمایید:</label>
                     <div class="correction-input-group">
                         <select id="correct-species-select" class="correction-select">
                             {% for sp in species_list %}
@@ -262,6 +265,17 @@
                         </select>
                         <button class="btn-submit-correction" onclick="submitFeedback('corrected')">
                             <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="btn_save_correction">ثبت اصلاحیه</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Zero-Retraining Novel Species Drawer -->
+                <div id="novel-species-drawer" class="correction-drawer hidden" style="background: #f5f3ff; border-color: #ddd6fe;">
+                    <label data-i18n="novel_drawer_label" style="color: #5b21b6;">نام علمی گونه جدید (یا برچسب آزمایشی) را وارد کنید تا بدون آموزش مجدد به پایگاه اضافه شود:</label>
+                    <div class="correction-input-group">
+                        <input type="text" id="novel-species-name" class="correction-select" placeholder="e.g. Argyrops spinifer (Forsskal, 1775)" style="background: #fff;">
+                        <button class="btn-submit-correction" style="background: #7c3aed;" onclick="registerCurrentAsNewSpecies()">
+                            <i class="fa-solid fa-dna"></i> <span data-i18n="btn_register_novel">افزودن فوری گونه جدید</span>
                         </button>
                     </div>
                 </div>
@@ -312,6 +326,26 @@
                     <strong id="modal-stat-sync" style="color: var(--text-primary); margin-inline-start: 0.35rem;">-</strong>
                 </div>
 
+                <!-- Multi-Shot Zero-Retraining Novel Species Box inside Modal -->
+                <div style="margin-top: 1rem; padding: 0.9rem; background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: var(--radius-sm);">
+                    <h4 style="font-size: 0.9rem; color: #5b21b6; margin-bottom: 0.5rem;">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="modal_novel_title">معرفی گونه کاملاً جدید (بدون نیاز به آموزش مجدد / Few-Shot)</span>
+                    </h4>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <input type="text" id="modal-novel-name" placeholder="Scientific name (e.g. Argyrops spinifer)" style="padding: 0.45rem 0.65rem; border: 1px solid #c4b5fd; border-radius: 6px; font-size: 0.85rem;">
+                        <input type="file" id="modal-novel-files" accept="image/*,.tif,.tiff" multiple style="font-size: 0.8rem;">
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <button class="btn-submit-correction" style="background: #7c3aed; font-size: 0.82rem;" onclick="registerModalNovelSpecies()">
+                                <i class="fa-solid fa-plus"></i> <span data-i18n="modal_novel_btn">ثبت پیش‌نمونه گونه جدید (1..5 Shot)</span>
+                            </button>
+                            <button class="btn-reset" style="font-size: 0.78rem; padding: 0.4rem 0.75rem;" onclick="resetCustomSpecies()">
+                                <i class="fa-solid fa-trash-can"></i> <span data-i18n="modal_reset_custom">حذف گونه‌های آزمایشی</span>
+                            </button>
+                        </div>
+                        <div id="modal-custom-list" style="font-size: 0.78rem; color: #4c1d95;"></div>
+                    </div>
+                </div>
+
                 <div style="margin-top: 1.25rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
                     <button class="btn-sample" onclick="triggerOnlineSync()">
                         <i class="fa-solid fa-arrows-rotate"></i> <span data-i18n="btn_sync_now">همگام‌سازی آنی با prototypes.pth</span>
@@ -358,8 +392,14 @@
                 feedback_desc: "آیا گونه شناسایی‌شده مورد تایید زیست‌شناس / تاکسونومیست است؟ تایید یا اصلاح شما به بازتنظیم برخط مدل کمک می‌کند.",
                 btn_confirm: "تایید تشخیص (Confirm)",
                 btn_correct: "اصلاح گونه (Correct Label)",
+                btn_novel: "ثبت گونه جدید (بدون آموزش)",
+                novel_drawer_label: "نام علمی گونه جدید (یا برچسب آزمایشی) را وارد کنید تا بدون آموزش مجدد به پایگاه اضافه شود:",
+                btn_register_novel: "افزودن فوری گونه جدید",
+                modal_novel_title: "معرفی گونه کاملاً جدید (بدون نیاز به آموزش مجدد / Few-Shot)",
+                modal_novel_btn: "ثبت پیش‌نمونه گونه جدید (1..5 Shot)",
+                modal_reset_custom: "حذف گونه‌های آزمایشی",
                 btn_sync: "همگام‌سازی برخط پیش‌نمونه‌ها (Sync EMA)",
-                select_correct_label: "گونه صحیح زیستی را از میان ۳۵ گونه انتخاب نمایید:",
+                select_correct_label: "گونه صحیح زیستی را از میان گونه‌های پایگاه انتخاب نمایید:",
                 btn_save_correction: "ثبت اصلاحیه",
                 al_nav_title: "یادگیری فعال",
                 al_modal_title: "داشبورد یادگیری فعال برخط (Active Learning)",
@@ -402,8 +442,14 @@
                 feedback_desc: "Does this classification align with taxonomic evaluation? Confirmation or correction adapts the prototypes in real time.",
                 btn_confirm: "Confirm Identification",
                 btn_correct: "Correct Species Label",
+                btn_novel: "Register New Species (Zero-Retrain)",
+                novel_drawer_label: "Enter new species name to add it immediately on the hypersphere without retraining:",
+                btn_register_novel: "Add Species Instantly",
+                modal_novel_title: "Register Brand-New Unseen Species (Zero-Retraining Few-Shot)",
+                modal_novel_btn: "Register Novel Prototype (1..5 Shot)",
+                modal_reset_custom: "Reset Custom Demo Taxa",
                 btn_sync: "Online EMA Prototype Sync",
-                select_correct_label: "Select the verified biological species from all 35 taxa:",
+                select_correct_label: "Select the verified biological species from covered taxa:",
                 btn_save_correction: "Save Correction",
                 al_nav_title: "Active Learning",
                 al_modal_title: "Real-Time Active Learning Dashboard",
@@ -512,13 +558,19 @@
         });
 
         function handleFile(file) {
-            if (!file.type.startsWith('image/')) return;
+            const isTif = /\.(tif|tiff)$/i.test(file.name);
+            if (!file.type.startsWith('image/') && !isTif) return;
+            dropZone.classList.add('hidden');
+            imagePreviewContainer.classList.remove('hidden');
+            resultSection.classList.add('hidden');
+            if (isTif) {
+                imagePreview.src = '';
+                uploadAndPredict(file);
+                return;
+            }
             const reader = new FileReader();
             reader.onload = (e) => {
                 imagePreview.src = e.target.result;
-                dropZone.classList.add('hidden');
-                imagePreviewContainer.classList.remove('hidden');
-                resultSection.classList.add('hidden');
                 uploadAndPredict(file);
             };
             reader.readAsDataURL(file);
@@ -700,13 +752,20 @@
             document.getElementById('predicted-sim').textContent = `${data.overall_similarity}${pctSign}`;
             document.getElementById('exec-time').textContent = isFa ? `زمان پردازش: ${data.execution_time}` : `Inference: ${data.execution_time}`;
 
-            // 4. Visual Tri-Deck
-            document.getElementById('input-scale-display').src = imagePreview.src;
+            // 4. Visual Tri-Deck (use server-converted preview_image so .tif works cleanly)
+            const previewSrc = data.preview_image || imagePreview.src;
+            if (data.preview_image) {
+                imagePreview.src = data.preview_image;
+            }
+            document.getElementById('input-scale-display').src = previewSrc;
             if (data.crop_overlay_image) {
                 document.getElementById('crop-overlay-img').src = data.crop_overlay_image;
             }
             if (data.gradcam_image) {
                 document.getElementById('gradcam-img').src = data.gradcam_image;
+            }
+            if (data.species_list) {
+                refreshSpeciesDropdownAndChips(data.species_list, data.custom_species || []);
             }
 
             // 5. Top 5 Species List (Two-Line Layout)
@@ -716,8 +775,12 @@
                 barsContainer.appendChild(createBarRow(item.species_name, item.similarity, item.rank, item.rank === 1));
             });
 
-            // 6. Reset Feedback Drawer
+            // 6. Reset Feedback Drawers (auto-open novel drawer hint if out_of_group)
             document.getElementById('correction-drawer').classList.add('hidden');
+            const novelDrawer = document.getElementById('novel-species-drawer');
+            if (novelDrawer) {
+                novelDrawer.classList.toggle('hidden', data.membership !== 'out_of_group');
+            }
             const fbMsg = document.getElementById('feedback-msg');
             fbMsg.classList.add('hidden');
             fbMsg.textContent = '';
@@ -732,10 +795,139 @@
             resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        // Active Learning Actions
+        // Active Learning & Zero-Retraining Novel Species Actions
         function toggleCorrectionDrawer() {
             const drawer = document.getElementById('correction-drawer');
+            const novelDrawer = document.getElementById('novel-species-drawer');
+            if (novelDrawer) novelDrawer.classList.add('hidden');
             drawer.classList.toggle('hidden');
+        }
+
+        function toggleNovelSpeciesDrawer() {
+            const novelDrawer = document.getElementById('novel-species-drawer');
+            const corrDrawer = document.getElementById('correction-drawer');
+            if (corrDrawer) corrDrawer.classList.add('hidden');
+            if (novelDrawer) novelDrawer.classList.toggle('hidden');
+        }
+
+        function refreshSpeciesDropdownAndChips(speciesList, customSpecies) {
+            if (!speciesList) return;
+            const customSet = new Set(customSpecies || []);
+            document.querySelectorAll('.dyn-sp-count').forEach(el => { el.textContent = speciesList.length; });
+
+            const sel = document.getElementById('correct-species-select');
+            if (sel) {
+                const prev = sel.value;
+                sel.innerHTML = '';
+                speciesList.forEach(sp => {
+                    const opt = document.createElement('option');
+                    opt.value = sp;
+                    opt.textContent = customSet.has(sp) ? `${sp} ★ (New)` : sp;
+                    sel.appendChild(opt);
+                });
+                if (speciesList.includes(prev)) sel.value = prev;
+            }
+
+            if (speciesChipsWrapper) {
+                speciesChipsWrapper.innerHTML = '';
+                speciesList.forEach(sp => {
+                    const span = document.createElement('span');
+                    span.className = 'species-chip';
+                    span.setAttribute('data-name', sp);
+                    span.textContent = customSet.has(sp) ? `${sp} ★` : sp;
+                    if (customSet.has(sp)) {
+                        span.style.borderColor = '#7c3aed';
+                        span.style.background = '#f5f3ff';
+                    }
+                    speciesChipsWrapper.appendChild(span);
+                });
+            }
+        }
+
+        async function registerCurrentAsNewSpecies() {
+            if (!currentResultData) return;
+            const isFa = (currentLang === 'fa');
+            const nameInp = document.getElementById('novel-species-name');
+            const speciesName = (nameInp ? nameInp.value : '').trim();
+            if (!speciesName) {
+                alert(isFa ? 'لطفاً نام گونه جدید را وارد کنید.' : 'Please enter the new species name.');
+                return;
+            }
+            const fbMsg = document.getElementById('feedback-msg');
+            fbMsg.className = 'feedback-msg';
+            fbMsg.classList.remove('hidden');
+            fbMsg.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + (isFa ? 'در حال ساخت پیش‌نمونه کروی گونه جدید...' : 'Creating novel species prototype...');
+
+            try {
+                const res = await fetch('/register_species', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ species_name: speciesName, filename: currentResultData.filename })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    fbMsg.style.background = '#f5f3ff';
+                    fbMsg.style.color = '#5b21b6';
+                    fbMsg.style.border = '1px solid #c4b5fd';
+                    fbMsg.innerHTML = `<i class="fa-solid fa-circle-check"></i> ` + (isFa ? `گونه جدید «${speciesName}» بدون نیاز به آموزش مجدد در ${data.elapsed_time} ثبت شد!` : data.message);
+                    if (data.species_list) refreshSpeciesDropdownAndChips(data.species_list, data.custom_species);
+                    if (data.stats) {
+                        updateALBadge(data.stats.total_verified);
+                        updateModalStats(data.stats);
+                    }
+                    nameInp.value = '';
+                } else {
+                    fbMsg.style.background = '#fef2f2';
+                    fbMsg.style.color = '#991b1b';
+                    fbMsg.innerHTML = data.error || 'Registration failed.';
+                }
+            } catch (err) {
+                console.error(err);
+                fbMsg.innerHTML = 'Connection error.';
+            }
+        }
+
+        async function registerModalNovelSpecies() {
+            const isFa = (currentLang === 'fa');
+            const spName = (document.getElementById('modal-novel-name').value || '').trim();
+            const filesInp = document.getElementById('modal-novel-files');
+            if (!spName || !filesInp.files.length) {
+                alert(isFa ? 'نام گونه جدید و حداقل یک تصویر را انتخاب کنید.' : 'Provide species name and at least one scale image.');
+                return;
+            }
+            const fd = new FormData();
+            fd.append('species_name', spName);
+            for (const f of filesInp.files) fd.append('files', f);
+
+            try {
+                const res = await fetch('/register_species', { method: 'POST', body: fd });
+                const data = await res.json();
+                if (data.success) {
+                    alert(isFa ? `گونه «${spName}» با ${data.shots} نمونه در ${data.elapsed_time} اضافه شد!` : data.message);
+                    document.getElementById('modal-novel-name').value = '';
+                    filesInp.value = '';
+                    if (data.species_list) refreshSpeciesDropdownAndChips(data.species_list, data.custom_species);
+                    if (data.stats) updateModalStats(data.stats);
+                } else {
+                    alert(data.error || 'Error');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Registration failed.');
+            }
+        }
+
+        async function resetCustomSpecies() {
+            const res = await fetch('/remove_custom_species', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (data.species_list) refreshSpeciesDropdownAndChips(data.species_list, data.custom_species);
+                if (data.stats) updateModalStats(data.stats);
+            }
         }
 
         async function submitFeedback(status) {
@@ -862,6 +1054,11 @@
             document.getElementById('modal-stat-corrected').textContent = stats.corrected_count || 0;
             document.getElementById('modal-stat-active-species').textContent = stats.active_species_count || 0;
             document.getElementById('modal-stat-sync').textContent = stats.last_synced_at || 'Never';
+            const cList = document.getElementById('modal-custom-list');
+            if (cList) {
+                const cs = stats.custom_species || [];
+                cList.textContent = cs.length ? `Custom taxa (${cs.length}): ${cs.join(', ')}` : '';
+            }
         }
     </script>
 </body>

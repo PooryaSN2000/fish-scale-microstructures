@@ -1,28 +1,19 @@
-# AquaLens AI v4: 35-Species Marine Fish Scale Classification
+# AquaLens AI v4.1: 35-Species Marine Fish Scale Classification
 
-Domain-invariant Deep Metric Learning pipeline for automated taxonomic identification across **35 validated marine fish species** ($\ge 7$ micrographs per species, 804 images total).
+Unified, domain-invariant metric-learning pipeline for taxonomic identification across **35 validated marine fish species** ($\ge 7$ micrographs per taxon, $N=804$) with **zero-retraining open-set few-shot registration** across newly encountered species.
 
-## Key Components
-- **MixStyle Domain Generalization:** Perturbs early ConvNeXt-Tiny channel statistics to improve cross-camera and lighting robustness.
-- **Class-Balanced ArcFace (CB-ArcFace):** Adaptive angular margins weighted inversely by species frequency to protect minority (tail) taxa.
-- **7-View Spherical-TTA & Sub-Centers:** Multi-view hyperspherical pooling matched against $K=2$ species sub-centers.
-- **Scale HUD & Grad-CAM:** Saliency localization and gradient heatmaps highlighting biological circuli, radii, and ctenii.
-- **Online Active Learning:** Rapid prototype EMA updates triggered from expert feedback in the web UI.
+## Key Upgrades (v4.1)
+- **Unified `ScaleDetector` Localization:** Accelerated percentile-clipped saliency ROI detector (`padding_ratio=0.12`, `min_area=0.007`) synchronized identically across training, prototype extraction, Grad-CAM, and WebApp prediction.
+- **Zero-Leakage Prototype Construction:** Reference centroids and head subcenters are extracted strictly from `split="train"` ($N=545$) via **7-View Spherical-TTA** — never touching validation or held-out test specimens.
+- **Domain Generalization & Tail Protection:** `ConvNeXt-Tiny` interleaved with `MixStyle` ($p=0.25, \alpha=0.3$), batch Fourier Domain Adaptation (`FDA`, $\beta=0.06$), LayerNorm-stabilized 384-d hyperspherical projection, and `ClassBalancedArcFace`.
+- **Zero-Retraining Novel Species Expansion & `.tif` Support:** Instantly register 1-to-$K$ images of an unseen species (JPEG, PNG, BMP, or 8/16-bit TIF/TIFF) directly into `prototypes.pth` via the Web UI without retraining weights.
 
-## Verified Test Results (142 Held-Out Micrographs)
-
-| Cohort / Metric | Score |
-| :--- | :---: |
-| **Overall Top-1 Accuracy** | **97.89%** (139/142) |
-| **Overall Top-3 / Top-5 Accuracy** | **100.00%** (142/142) |
-| **Head Cohort ($\ge 20$ samples)** | **98.51%** |
-| **Medium Cohort (10–19 samples)** | **97.73%** |
-| **Tail Cohort ($< 10$ samples)** | **96.77%** |
-
-## Directory Structure
-- `src/` — Dataset, augmentations (FDA), MixStyle, CB-ArcFace loss, training, evaluation, Grad-CAM, HUD detector, and inference engine
-- `webapp/` — Flask production server (`app.py`, port `5004`)
-- `checkpoints/` — Verified prototype vectors (`prototypes.pth`), `classification_report.txt`, `confusion_matrix.png`, and `loss_curves.png`
+## Verified Zero-Leakage Benchmarks
+- **Held-Out Test ($N=142$):** **92.25% Top-1** (131/142), **95.07% Top-3**, **96.48% Top-5**, **0.9118 Weighted F1**, **0.8717 Macro F1** (**97.78%** Head, **86.11%** Medium, **75.00%** Tail).
+- **5-Fold Stratified Cross-Validation ($N=804$):** **91.42% $\pm$ 2.43% Top-1**, **95.89% Top-3**, **0.8740 Macro F1**.
+- **Congeneric & Cohort Separation:** Intra-class cosine $0.9106 \pm 0.1059$ vs. Inter-class $0.4507 \pm 0.0915$ (Welch's $t=51.18$, $p=1.08\times 10^{-95}$, Cohen's $d=5.00$); calibrated OOD cutoffs at `0.78` / `0.85`.
+- **Cross-Camera Stress & Attribution Proof:** Preserves **88.03%–92.96%** Top-1 accuracy under unseen sensor gamma, warm CMOS drift, optical blur, and combined perturbations; masking the scale body (`Scale-Masked Background Only`) drops accuracy to **5.63%**.
+- **Open-Set Few-Shot Novel Species (21 Unseen Taxa):** Without retraining weights, 3-shot registration achieves **78.79% Top-3** combined retrieval across 52 classes.
 
 ## Quick Start
 
@@ -32,8 +23,10 @@ python3 multiclass_35species/webapp/app.py
 ```
 Open `http://127.0.0.1:5004` in your browser.
 
-### Run Evaluation or Training
+### Train, Evaluate & Benchmark
 ```bash
+python3 multiclass_35species/src/train.py
 python3 multiclass_35species/src/evaluate.py
-PYTHONPATH=. python3 -m multiclass_35species.src.train
+python3 multiclass_35species/src/benchmark_generalization.py
+python3 multiclass_35species/src/generate_all_visuals.py
 ```

@@ -3,7 +3,7 @@ import io
 import time
 import base64
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 import torch
 import torch.nn.functional as F
 from torchvision import transforms
@@ -12,164 +12,128 @@ try:
     from . import config
     from .model import FishScaleConvNeXtV4
     from .scale_detector import ScaleDetector
-    from .gradcam import GradCAM
-    from .dataset import apply_clahe_preprocessing
+    from .gradcam import GradCAMExplainer
+    from .dataset import apply_clahe_preprocessing, load_rgb_image
 except ImportError:
     import config
     from model import FishScaleConvNeXtV4
     from scale_detector import ScaleDetector
-    from gradcam import GradCAM
-    from dataset import apply_clahe_preprocessing
+    from gradcam import GradCAMExplainer
+    from dataset import apply_clahe_preprocessing, load_rgb_image
+
 
 class FishClassifierV4:
     """
-    High-Precision Production Inference Engine for AquaLens AI v4.
-    
-    Architectural Highlights:
-    1. Multi-Subcenter Hyperspherical Matching (captures intra-species scale diversity e.g. dorsal vs lateral scales).
-    2. 7-View Spherical Test-Time Augmentation (Spherical-TTA) for complete camera orientation and scale invariance.
-    3. Biological Scale Detection & Saliency HUD auto-crop.
-    4. Grad-CAM visual heatmaps highlighting circuli & radii growth rings.
-    5. Calibrated Epistemic Uncertainty analysis for Active Learning.
+    Production Inference & Open-Set Registry Engine for AquaLens AI v4.1.
+    Unifies ScaleDetector ROI isolation, CLAHE contrast enhancement, 7-View Spherical-TTA,
+    multi-subcenter prototype matching, Grad-CAM explainability, and runtime novel species registration.
     """
     def __init__(self, model_path: str = None, prototypes_path: str = None):
         self.device = config.DEVICE
-        self.detector = ScaleDetector(mode="adaptive")
 
-        # Fallback paths if not explicitly provided
         if model_path is None:
             model_path = os.path.join(config.CHECKPOINT_DIR, "best_model.pth")
         if prototypes_path is None:
             prototypes_path = os.path.join(config.CHECKPOINT_DIR, "prototypes.pth")
 
-        # Base preprocessing transforms
-        self.transform = transforms.Compose([
-            transforms.Resize(config.IMAGE_SIZE),
-            transforms.CenterCrop(config.IMAGE_SIZE),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
+        self.model_path = model_path
+        self.prototypes_path = prototypes_path
 
-        # Load Prototypes and Sub-centers
         if not os.path.exists(prototypes_path):
             raise FileNotFoundError(f"Prototypes checkpoint not found at: {prototypes_path}")
-
-        proto_dict = torch.load(prototypes_path, map_location=self.device)
-        self.class_names = proto_dict["class_names"]
-        self.prototypes = proto_dict["prototypes"].to(self.device)  # (57, 384)
-        self.prototypes = F.normalize(self.prototypes, p=2, dim=1)
-        self.subcenters = proto_dict.get("subcenters", None)
-
-        # Initialize and load ConvNeXt-Tiny model
-        self.model = FishScaleConvNeXtV4(
-            embedding_dim=config.EMBEDDING_DIM,
-            use_mixstyle=False  # MixStyle is inactive during inference
-        ).to(self.device)
-
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model checkpoint not found at: {model_path}")
+
+        self.reload_prototypes()
+
+        self.detector = ScaleDetector(
+            mode="adaptive",
+            padding_ratio=getattr(config, "ROI_PADDING_RATIO", 0.12),
+        )
+
+        self.transform = transforms.Compose([
+            transforms.Resize(self.image_size),
+            transforms.CenterCrop(self.image_size),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+
+        self.model = FishScaleConvNeXtV4(
+            embedding_dim=self.embedding_dim,
+            use_mixstyle=False,
+        ).to(self.device)
 
         ckpt = torch.load(model_path, map_location=self.device)
         state_dict = ckpt["model_state_dict"] if "model_state_dict" in ckpt else ckpt
         self.model.load_state_dict(state_dict, strict=False)
         self.model.eval()
 
-        # Initialize Grad-CAM on Stage 4 features of ConvNeXt
         target_layer = self.model.backbone.features[-1]
-        self.grad_cam = GradCAM(self.model, target_layer)
+        self.grad_cam = GradCAMExplainer(self.model, target_layer)
 
-        print(f"[FishClassifierV4] Successfully loaded {len(self.class_names)} species prototypes with multi-subcenters.")
+        print(f"[FishClassifierV4] Loaded {len(self.class_names)} species prototypes (ROI_Crop={self.use_roi_crop}, CLAHE={self.use_clahe}, TTA={self.use_tta}).")
+
+    def reload_prototypes(self):
+        proto_dict = torch.load(self.prototypes_path, map_location=self.device)
+        self.class_names = list(proto_dict["class_names"])
+        self.prototypes = F.normalize(proto_dict["prototypes"].to(self.device), p=2, dim=1)
+        self.subcenters = proto_dict.get("subcenters", {})
+        self.custom_species = set(proto_dict.get("custom_species", []))
+        self.base_class_count = int(proto_dict.get("base_class_count", len(self.class_names)))
+        self.image_size = tuple(proto_dict.get("image_size", config.IMAGE_SIZE))
+        self.embedding_dim = int(proto_dict.get("embedding_dim", config.EMBEDDING_DIM))
+        self.use_roi_crop = bool(proto_dict.get("use_roi_crop", getattr(config, "USE_ROI_CROP", True)))
+        self.roi_padding_ratio = float(proto_dict.get("roi_padding_ratio", getattr(config, "ROI_PADDING_RATIO", 0.12)))
+        self.use_clahe = bool(proto_dict.get("use_clahe", config.USE_CLAHE))
+        self.use_tta = bool(proto_dict.get("use_tta", getattr(config, "USE_SPHERICAL_TTA", True)))
 
     def _generate_tta_views(self, pil_img: Image.Image) -> list:
-        """
-        Generates 7 complementary geometric and multi-scale views to ensure
-        complete invariance to slide orientation, tilt, and optical magnification.
-        """
-        views = []
-        # View 1: Standard canonical orientation
-        views.append(self.transform(pil_img))
-
-        # View 2: Horizontal mirror
-        views.append(self.transform(pil_img.transpose(Image.FLIP_LEFT_RIGHT)))
-
-        # View 3: Vertical mirror
-        views.append(self.transform(pil_img.transpose(Image.FLIP_TOP_BOTTOM)))
-
-        # View 4: 180-degree rotation
-        views.append(self.transform(pil_img.rotate(180)))
-
-        # View 5: 90-degree clockwise rotation
-        views.append(self.transform(pil_img.rotate(90)))
-
-        # View 6: 270-degree rotation (90 counter-clockwise)
-        views.append(self.transform(pil_img.rotate(270)))
-
-        # View 7: Center scale crop (0.94x zoom)
         w, h = pil_img.size
         crop_box = (int(0.03 * w), int(0.03 * h), int(0.97 * w), int(0.97 * h))
-        zoomed = pil_img.crop(crop_box).resize(pil_img.size, Image.BILINEAR)
-        views.append(self.transform(zoomed))
+        zoomed = pil_img.crop(crop_box).resize(pil_img.size, Image.Resampling.BILINEAR)
+        return [
+            self.transform(pil_img),
+            self.transform(pil_img.transpose(Image.Transpose.FLIP_LEFT_RIGHT)),
+            self.transform(pil_img.transpose(Image.Transpose.FLIP_TOP_BOTTOM)),
+            self.transform(pil_img.rotate(180)),
+            self.transform(pil_img.rotate(90)),
+            self.transform(pil_img.rotate(270)),
+            self.transform(zoomed),
+        ]
 
-        return views
-
-    def extract_embedding(self, pil_img: Image.Image, use_tta: bool = True) -> torch.Tensor:
+    @torch.no_grad()
+    def extract_embedding(
+        self,
+        pil_img: Image.Image,
+        use_tta: bool = True,
+        apply_roi_crop: bool = None,
+        apply_clahe: bool = None,
+    ) -> torch.Tensor:
         """
-        Extracts L2-normalized deep embedding on the unit hypersphere with 7-View Spherical-TTA.
+        Preprocesses an arbitrary PIL micrograph through optional ScaleDetector ROI crop
+        and CLAHE contrast enhancement, then extracts an L2-normalized embedding.
         """
-        with torch.no_grad():
-            if use_tta and config.USE_SPHERICAL_TTA:
-                views = self._generate_tta_views(pil_img)
-                batch = torch.stack(views).to(self.device)  # (7, 3, H, W)
-                emb_views = self.model(batch)               # (7, embedding_dim)
-                
-                # Hyperspherical mean pooling: sum multi-view vectors and re-normalize
-                mean_emb = emb_views.sum(dim=0, keepdim=True)
-                final_emb = F.normalize(mean_emb, p=2, dim=1)
-                return final_emb
-            else:
-                inp = self.transform(pil_img).unsqueeze(0).to(self.device)
-                return self.model(inp)
+        crop_flag = self.use_roi_crop if apply_roi_crop is None else apply_roi_crop
+        clahe_flag = self.use_clahe if apply_clahe is None else apply_clahe
 
-    def predict(self, image_path: str, auto_crop: bool = False, return_metadata: bool = True):
-        """
-        Performs high-reliability 57-species biometric identification on an input micrograph.
-        """
-        start_time = time.time()
-        orig_img = Image.open(image_path).convert('RGB')
+        proc = pil_img.convert("RGB")
+        if crop_flag and self.detector is not None:
+            proc = self.detector.crop(proc, padding_ratio=self.roi_padding_ratio, square=True)
+        if clahe_flag:
+            proc = apply_clahe_preprocessing(proc)
 
-        # 1. Biological Scale Detection & HUD Auto-crop
-        crop_overlay_b64 = None
-        processed_img = orig_img
+        if use_tta and self.use_tta:
+            views = self._generate_tta_views(proc)
+            batch = torch.stack(views).to(self.device)
+            emb_views = self.model(batch)
+            mean_emb = emb_views.sum(dim=0, keepdim=True)
+            return F.normalize(mean_emb, p=2, dim=1)
+        inp = self.transform(proc).unsqueeze(0).to(self.device)
+        return F.normalize(self.model(inp), p=2, dim=1)
 
-        if auto_crop:
-            try:
-                x1, y1, x2, y2 = self.detector.detect_bbox(orig_img, square=True)
-                cropped = orig_img.crop((x1, y1, x2, y2))
-                if cropped.size[0] > 40 and cropped.size[1] > 40:
-                    processed_img = cropped
-                    # Draw HUD visual overlay
-                    overlay_img = orig_img.copy()
-                    from PIL import ImageDraw
-                    draw = ImageDraw.Draw(overlay_img)
-                    draw.rectangle([x1, y1, x2, y2], outline="#0284c7", width=5)
-                    buffered = io.BytesIO()
-                    overlay_img.save(buffered, format="JPEG", quality=85)
-                    crop_overlay_b64 = "data:image/jpeg;base64," + base64.b64encode(buffered.getvalue()).decode()
-            except Exception as e:
-                print(f"[Warning] Scale detector fallback: {e}")
-                processed_img = orig_img
-
-        # Apply biological CLAHE
-        if config.USE_CLAHE:
-            processed_img = apply_clahe_preprocessing(processed_img)
-
-        # 2. Extract Spherical-TTA embedding (7 views)
-        query_emb = self.extract_embedding(processed_img, use_tta=True)
-
-        # 3. Multi-Subcenter & Centroid Similarity Matching
-        sim_proto = torch.mm(query_emb, self.prototypes.t()).squeeze(0)  # (57,)
-        
-        if self.subcenters is not None:
+    def score_embedding(self, query_emb: torch.Tensor) -> np.ndarray:
+        sim_proto = torch.mm(query_emb, self.prototypes.t()).squeeze(0)
+        if self.subcenters:
             max_sims = []
             for c in range(len(self.class_names)):
                 proto_val = float(sim_proto[c].item())
@@ -179,69 +143,100 @@ class FishClassifierV4:
                     max_sims.append(max(proto_val, sub_val))
                 else:
                     max_sims.append(proto_val)
-            sims_np = np.array(max_sims)
-        else:
-            sims_np = sim_proto.cpu().numpy()
+            return np.array(max_sims, dtype=np.float32)
+        return sim_proto.cpu().numpy()
 
-        # Sort species by similarity descending
+    def predict(self, image_path: str, auto_crop: bool = None, return_metadata: bool = True):
+        """
+        Runs biometric identification on an image path (.jpg/.png/.bmp/.tif/.tiff).
+        """
+        start_time = time.time()
+        orig_img = load_rgb_image(image_path)
+        crop_flag = self.use_roi_crop if auto_crop is None else auto_crop
+
+        crop_overlay_b64 = None
+        processed_img = orig_img
+
+        if crop_flag:
+            try:
+                x1, y1, x2, y2 = self.detector.detect_bbox(
+                    orig_img, padding_ratio=self.roi_padding_ratio, square=True
+                )
+                cropped = orig_img.crop((x1, y1, x2, y2))
+                if cropped.size[0] > 40 and cropped.size[1] > 40:
+                    processed_img = cropped
+                    crop_overlay_b64 = self.detector.visualize_detection_base64(
+                        orig_img, bbox=(x1, y1, x2, y2)
+                    )
+            except Exception as e:
+                print(f"[Warning] Scale detector fallback: {e}")
+                processed_img = orig_img
+
+        # We already cropped above if crop_flag is True, so skip double cropping in extract_embedding
+        query_emb = self.extract_embedding(
+            processed_img, use_tta=True, apply_roi_crop=False, apply_clahe=self.use_clahe
+        )
+
+        sims_np = self.score_embedding(query_emb)
         sorted_indices = np.argsort(sims_np)[::-1]
-        top_idx = sorted_indices[0]
+        top_idx = int(sorted_indices[0])
         pred_class = self.class_names[top_idx]
         max_sim = float(sims_np[top_idx])
 
-        # Second best similarity for confidence margin
         second_sim = float(sims_np[sorted_indices[1]]) if len(sorted_indices) > 1 else 0.0
         margin = max_sim - second_sim
 
-        # Map similarities to dictionary {species: sim_float}
         all_sims = {self.class_names[i]: float(sims_np[i]) for i in range(len(self.class_names))}
-        
-        # Calibrated softmax probabilities with temperature scaling
-        scaled_sims = torch.tensor(sims_np, device=self.device) * 15.0
+        scaled_sims = torch.tensor(sims_np, device=self.device) * 18.0
         probs = F.softmax(scaled_sims, dim=0).cpu().numpy()
         all_probs = {self.class_names[i]: float(probs[i]) for i in range(len(self.class_names))}
 
         confidence = float(probs[top_idx])
         exec_time = time.time() - start_time
+        n_total = len(self.class_names)
 
-        # Active Learning / Epistemic Uncertainty assessment
-        # Empirical separation: Mean correct = 80%, Mean incorrect/ambiguous = 60%
-        is_uncertain = (max_sim < 0.55) or (margin < 0.05)
+        is_uncertain = (max_sim < 0.78) or (margin < 0.04)
         uncertainty_reason = ""
-        if max_sim < 0.55:
-            uncertainty_reason = f"حداکثر تشابه ساختاری در سطح پایینی است ({max_sim*100:.1f}٪). نمونه ممکن است خارج از ۵۷ گونه تحت پوشش یا دارای نویز شدید باشد."
-        elif margin < 0.05:
-            second_class = self.class_names[sorted_indices[1]]
-            uncertainty_reason = f"ابهام بین دو گونه خواهر: گونه اول «{pred_class}» و گونه دوم «{second_class}» با اختلاف حاشیه ناچیز {margin*100:.1f}٪ هستند."
+        if max_sim < 0.78:
+            uncertainty_reason = (
+                f"حداکثر تشابه ساختاری پایین است ({max_sim*100:.1f}٪ < آستانه ۷۸٪). "
+                f"این نمونه احتمالاً متعلق به گونه‌ای جدید خارج از {n_total} گونه ثبت‌شده است "
+                f"(می‌توانید همین نمونه را مستقیماً به عنوان گونه جدید ثبت کنید)."
+            )
+        elif margin < 0.04:
+            second_class = self.class_names[int(sorted_indices[1])]
+            uncertainty_reason = (
+                f"ابهام نزدیک بین دو گونه: «{pred_class}» و «{second_class}» "
+                f"(اختلاف تشابه {margin*100:.1f}٪)."
+            )
 
         meta = {
             "execution_time": f"{exec_time:.2f}s",
             "margin": round(margin * 100, 1),
             "is_uncertain": is_uncertain,
+            "is_custom_species": pred_class in self.custom_species,
             "uncertainty_reason": uncertainty_reason,
-            "crop_overlay_image": crop_overlay_b64
+            "crop_overlay_image": crop_overlay_b64,
         }
 
         if return_metadata:
             return pred_class, confidence, all_probs, max_sim, all_sims, meta
         return pred_class, confidence
 
-    def explain(self, image_input, auto_crop: bool = True) -> str:
-        """
-        Generates Grad-CAM visual heatmap overlay over the scale microstructures.
-        When auto_crop is True, focuses explainability directly on the localized
-        scale to reveal biological growth rings (circuli & radii) without background bias.
-        """
+    def explain(self, image_input, auto_crop: bool = None) -> str:
         try:
             if isinstance(image_input, str):
-                orig_img = Image.open(image_input).convert('RGB')
+                orig_img = load_rgb_image(image_input)
             else:
                 orig_img = image_input
 
+            crop_flag = self.use_roi_crop if auto_crop is None else auto_crop
             target_img = orig_img
-            if auto_crop:
+            if crop_flag:
                 try:
-                    x1, y1, x2, y2 = self.detector.detect_bbox(orig_img, square=True)
+                    x1, y1, x2, y2 = self.detector.detect_bbox(
+                        orig_img, padding_ratio=self.roi_padding_ratio, square=True
+                    )
                     cropped = orig_img.crop((x1, y1, x2, y2))
                     if cropped.size[0] > 40 and cropped.size[1] > 40:
                         target_img = cropped
@@ -254,5 +249,5 @@ class FishClassifierV4:
             print(f"[GradCAM Warning] {e}")
             return None
 
-# Backwards compatibility alias
+
 FishClassifier = FishClassifierV4
