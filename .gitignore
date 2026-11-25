@@ -17,12 +17,12 @@ myenv/
 *.pt
 *.bin
 *.onnx
+!lutjanus_5species/checkpoints/prototypes.pth
 !multiclass_35species/checkpoints/prototypes.pth
 
-# Specialized local 5-species Lutjanidae study (kept locally, excluded from GitHub main repo)
-lutjanus_5species/
-
-# Dataset & Raw Microscopic Imagery (Excluded as requested)
+# Dataset & Raw Microscopic Imagery (Excluded from GitHub)
+dataset/
+test_dataset/
 scale fish/
 scale_fish/
 *.zip
@@ -30,7 +30,7 @@ scale_fish/
 *.tif
 *.tiff
 
-# Academic Paper Drafts, PDFs & LaTeX files (Excluded as requested)
+# Academic Paper Drafts, PDFs & LaTeX files
 *.pdf
 *.tex
 *.aux
@@ -52,4 +52,3 @@ scratch/
 .idea/
 .vscode/
 .DS_Store
-

@@ -3,8 +3,8 @@ import torch
 
 # Base directories
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# ROOT_DIR points to the dataset folder 'scale fish' at project root
-ROOT_DIR = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)), "scale fish")
+# ROOT_DIR points to the dataset folder 'dataset' at project root
+ROOT_DIR = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)), "dataset")
 
 # Hardware Device configuration
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
