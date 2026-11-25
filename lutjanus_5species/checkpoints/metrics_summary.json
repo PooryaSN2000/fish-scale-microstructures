@@ -5,6 +5,8 @@
   "test_weighted_precision": 0.9847,
   "test_weighted_recall": 0.9796,
   "test_weighted_f1": 0.9807,
+  "test_macro_precision": 0.95,
+  "test_macro_recall": 0.9857,
   "test_macro_f1": 0.964,
   "test_per_stage_f1": [
     1.0,
@@ -15,9 +17,16 @@
   ],
   "test_per_stage_auc": [
     1.0,
-    0.9959,
+    0.9878,
     1.0,
-    0.9928,
+    0.9855,
+    1.0
+  ],
+  "test_per_stage_ap": [
+    1.0,
+    0.9786,
+    1.0,
+    0.8056,
     1.0
   ],
   "all_total": 233,

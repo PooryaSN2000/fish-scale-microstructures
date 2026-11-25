@@ -9,6 +9,7 @@ from skimage import exposure
 
 import config
 from features import extract_classical_features
+from scale_detector import ScaleDetector
 
 try:
     import cv2
@@ -53,11 +54,13 @@ class FishScaleDataset(Dataset):
     Dataset selecting the 5 target Lutjanus species and performing a deterministic
     60% Train / 20% Val / 20% Test split per species.
     """
-    def __init__(self, root_dir: str, split: str = "train", seed: int = 42, use_clahe: bool = None):
+    def __init__(self, root_dir: str, split: str = "train", seed: int = 42, use_clahe: bool = None, use_roi_crop: bool = None):
         self.root_dir = root_dir
         self.split = split
         self.transform = get_transforms(split)
         self.use_clahe = config.USE_CLAHE if use_clahe is None else use_clahe
+        self.use_roi_crop = getattr(config, "USE_ROI_CROP", True) if use_roi_crop is None else use_roi_crop
+        self.detector = ScaleDetector(padding_ratio=0.12) if self.use_roi_crop else None
 
         if not os.path.exists(root_dir):
             raise FileNotFoundError(f"Root dataset directory not found: {root_dir}")
@@ -123,9 +126,11 @@ class FishScaleDataset(Dataset):
         self.image_cache = {}
         self.classical_cache = {}
 
-        print(f"Preloading images for split '{split}' (CLAHE={self.use_clahe})...")
+        print(f"Preloading images for split '{split}' (ROI_Crop={self.use_roi_crop}, CLAHE={self.use_clahe})...")
         for idx, img_path in enumerate(self.image_paths):
             image = Image.open(img_path).convert("RGB")
+            if self.use_roi_crop and self.detector is not None:
+                image = self.detector.crop(image, padding_ratio=0.12, square=True)
             if self.use_clahe:
                 image = apply_clahe_preprocessing(image)
             self.image_cache[idx] = image

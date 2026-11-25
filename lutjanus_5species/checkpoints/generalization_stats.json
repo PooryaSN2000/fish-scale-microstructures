@@ -1,0 +1,229 @@
+{
+  "cross_validation_5fold": {
+    "folds": [
+      {
+        "fold": 1,
+        "n_test": 47,
+        "accuracy_pct": 95.74,
+        "macro_f1": 0.9325,
+        "weighted_f1": 0.9584
+      },
+      {
+        "fold": 2,
+        "n_test": 47,
+        "accuracy_pct": 93.62,
+        "macro_f1": 0.9151,
+        "weighted_f1": 0.9351
+      },
+      {
+        "fold": 3,
+        "n_test": 47,
+        "accuracy_pct": 97.87,
+        "macro_f1": 0.9704,
+        "weighted_f1": 0.9779
+      },
+      {
+        "fold": 4,
+        "n_test": 46,
+        "accuracy_pct": 89.13,
+        "macro_f1": 0.7789,
+        "weighted_f1": 0.8925
+      },
+      {
+        "fold": 5,
+        "n_test": 46,
+        "accuracy_pct": 95.65,
+        "macro_f1": 0.912,
+        "weighted_f1": 0.9583
+      }
+    ],
+    "mean_accuracy_pct": 94.4,
+    "std_accuracy_pct": 2.96,
+    "mean_macro_f1": 0.9018,
+    "std_macro_f1": 0.0649,
+    "mean_weighted_f1": 0.9444,
+    "per_stage_oof_recall_pct": [
+      100.0,
+      89.39,
+      80.95,
+      85.71,
+      100.0
+    ],
+    "overall_oof_accuracy_pct": 94.42
+  },
+  "robustness_stress_tests": {
+    "Clean Scale ROI (Standard)": {
+      "correct": 48,
+      "total": 49,
+      "accuracy_pct": 97.96,
+      "mean_top1_sim": 0.8912
+    },
+    "Full Uncropped Slide": {
+      "correct": 43,
+      "total": 49,
+      "accuracy_pct": 87.76,
+      "mean_top1_sim": 0.8063
+    },
+    "Dark / Low-Gamma Sensor (g=1.45)": {
+      "correct": 46,
+      "total": 49,
+      "accuracy_pct": 93.88,
+      "mean_top1_sim": 0.8518
+    },
+    "Bright Warm CMOS Shift (g=0.72)": {
+      "correct": 48,
+      "total": 49,
+      "accuracy_pct": 97.96,
+      "mean_top1_sim": 0.8885
+    },
+    "Optical Defocus Blur (r=1.2)": {
+      "correct": 48,
+      "total": 49,
+      "accuracy_pct": 97.96,
+      "mean_top1_sim": 0.8758
+    },
+    "Combined Unseen Microscope": {
+      "correct": 48,
+      "total": 49,
+      "accuracy_pct": 97.96,
+      "mean_top1_sim": 0.8865
+    },
+    "Scale-Masked Background Only": {
+      "correct": 34,
+      "total": 49,
+      "accuracy_pct": 69.39,
+      "mean_top1_sim": 0.629
+    },
+    "ROI Interior Masked (Blank Center)": {
+      "correct": 36,
+      "total": 49,
+      "accuracy_pct": 73.47,
+      "mean_top1_sim": 0.5819
+    }
+  },
+  "congeneric_statistics": {
+    "intra_mean": 0.8705,
+    "intra_std": 0.1931,
+    "inter_mean": -0.2216,
+    "inter_std": 0.2162,
+    "welch_t": 34.55,
+    "welch_p": 3.5139433581472885e-50,
+    "mannwhitney_p": 2.5817020110621005e-26,
+    "cohen_d": 5.16,
+    "pairwise_centroid_similarity": [
+      [
+        1.0,
+        -0.32,
+        -0.151,
+        -0.294,
+        -0.243
+      ],
+      [
+        -0.32,
+        1.0,
+        -0.216,
+        -0.277,
+        -0.477
+      ],
+      [
+        -0.151,
+        -0.216,
+        1.0,
+        -0.113,
+        -0.125
+      ],
+      [
+        -0.294,
+        -0.277,
+        -0.113,
+        1.0,
+        -0.041
+      ],
+      [
+        -0.243,
+        -0.477,
+        -0.125,
+        -0.041,
+        1.0
+      ]
+    ],
+    "ood_mean_max_sim": 0.7188,
+    "ood_samples": [
+      {
+        "source": "External TIF",
+        "file": "112-4+8.tif",
+        "max_sim": 0.7112
+      },
+      {
+        "source": "External TIF",
+        "file": "120-5-4.tif",
+        "max_sim": 0.9013
+      },
+      {
+        "source": "External TIF",
+        "file": "163-4-22.tif",
+        "max_sim": 0.4829
+      },
+      {
+        "source": "Upeneus",
+        "file": "42-12-1--.jpg",
+        "max_sim": 0.7027
+      },
+      {
+        "source": "Upeneus",
+        "file": "42-12-1-.jpg",
+        "max_sim": 0.8492
+      },
+      {
+        "source": "Upeneus",
+        "file": "42-12-1.jpg",
+        "max_sim": 0.5961
+      },
+      {
+        "source": "Platycephalus",
+        "file": "1B.jpg",
+        "max_sim": 0.7453
+      },
+      {
+        "source": "Platycephalus",
+        "file": "2B.jpg",
+        "max_sim": 0.6641
+      },
+      {
+        "source": "Platycephalus",
+        "file": "3B.jpg",
+        "max_sim": 0.55
+      },
+      {
+        "source": "Gerres",
+        "file": "203-40-5++++.jpg",
+        "max_sim": 0.6885
+      },
+      {
+        "source": "Gerres",
+        "file": "203-40-5++++B.jpg",
+        "max_sim": 0.7528
+      },
+      {
+        "source": "Gerres",
+        "file": "77-40-1++.jpg",
+        "max_sim": 0.6866
+      },
+      {
+        "source": "Scolopsis",
+        "file": "8-31-+.jpg",
+        "max_sim": 0.7073
+      },
+      {
+        "source": "Scolopsis",
+        "file": "8-31-1++++.jpg",
+        "max_sim": 0.8308
+      },
+      {
+        "source": "Scolopsis",
+        "file": "8-31-1+++.jpg",
+        "max_sim": 0.9128
+      }
+    ]
+  }
+}

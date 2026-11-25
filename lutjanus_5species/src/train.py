@@ -16,6 +16,7 @@ import config
 import save_prototypes
 from dataset import FishScaleDataset, EpisodicBatchSampler
 from model import ProtoNet, compute_prototypes_and_logits, compute_protonet_loss
+from augmentations import fourier_amplitude_swap
 
 
 def set_seed(seed: int):
@@ -34,9 +35,23 @@ def get_gpu_transforms():
         v2.RandomRotation(180),
         v2.RandomHorizontalFlip(),
         v2.RandomVerticalFlip(),
-        v2.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1),
+        v2.RandomApply([v2.GaussianBlur(kernel_size=5, sigma=(0.3, 1.2))], p=0.25),
+        v2.ColorJitter(brightness=0.25, contrast=0.25, saturation=0.15, hue=0.03),
         v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
+
+
+def apply_batch_fda(images: torch.Tensor) -> torch.Tensor:
+    """Applies Fourier Domain Amplitude Swap to 30% of batch pairs before normalization."""
+    if not getattr(config, "USE_FDA", False) or images.size(0) < 2 or random.random() > 0.35:
+        return images
+    out = images.clone()
+    perm = torch.randperm(images.size(0), device=images.device)
+    half = images.size(0) // 2
+    beta = getattr(config, "FDA_BETA", 0.08)
+    for i in range(half):
+        out[i] = fourier_amplitude_swap(images[i], images[perm[i]], beta=beta)
+    return out
 
 
 def get_gpu_val_transforms():
@@ -51,6 +66,7 @@ def train_epoch_stage1(model, dataloader, optimizer, device, gpu_transforms):
     for batch in dataloader:
         optimizer.zero_grad()
         images, labels = batch[0].to(device), batch[1].to(device)
+        images = apply_batch_fda(images)
         images = gpu_transforms(images)
         logits = model(images, stage=1)
         loss = F.cross_entropy(logits, labels)
@@ -80,7 +96,8 @@ def train_epoch_stage2(model, dataloader, optimizer, device, gpu_transforms):
     total_loss, total_acc = 0.0, 0.0
     for batch in dataloader:
         optimizer.zero_grad()
-        images = gpu_transforms(batch[0].to(device))
+        images = apply_batch_fda(batch[0].to(device))
+        images = gpu_transforms(images)
         embeddings = model(images, stage=2)
         logits, targets = compute_prototypes_and_logits(
             embeddings, n_way=config.N_WAY, k_shot=config.K_SHOT,
@@ -177,6 +194,9 @@ def main():
         use_pretrained=True,
         embedding_dim=config.EMBEDDING_DIM,
         use_classical=config.USE_CLASSICAL,
+        use_mixstyle=getattr(config, "USE_MIXSTYLE", True),
+        mixstyle_p=getattr(config, "MIXSTYLE_P", 0.5),
+        mixstyle_alpha=getattr(config, "MIXSTYLE_ALPHA", 0.3),
     ).to(device)
 
     gpu_train_tf = get_gpu_transforms().to(device)
@@ -245,7 +265,9 @@ def main():
                     "classical_proj_dim": config.CLASSICAL_PROJ_DIM,
                     "image_size": config.IMAGE_SIZE,
                     "use_clahe": config.USE_CLAHE,
+                    "use_roi_crop": getattr(config, "USE_ROI_CROP", True),
                     "use_tta": config.USE_TTA,
+                    "use_mixstyle": getattr(config, "USE_MIXSTYLE", True),
                     "n_way": config.N_WAY,
                     "k_shot": config.K_SHOT,
                 },

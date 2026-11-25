@@ -9,7 +9,7 @@ This repository contains two complementary pipelines:
 | Directory | Scope | Backbone & Method | Web Port | Key Result |
 | :--- | :--- | :--- | :---: | :--- |
 | **`multiclass_35species/`** | **35 Marine Species** (804 micrographs, $\ge 7$ samples/species) | ConvNeXt-Tiny + MixStyle + CB-ArcFace + 7-View Spherical-TTA + Grad-CAM | `5004` | **97.89% Top-1** (100% Top-3/5, 96.77% Tail) |
-| **`lutjanus_5species/`** | **5 *Lutjanus* Species** (233 micrographs, *Lutjanidae* case study) | ConvNeXt-Tiny + HOG/LBP + Episodic Prototypical Network | `5000` | **88.40% Test** / **93.56% Full** |
+| **`lutjanus_5species/`** | **5 *Lutjanus* Species** (233 micrographs, *Lutjanidae* case study) | `ScaleDetector` + ConvNeXt-Tiny + `MixStyle` + `FDA` + Episodic `ProtoNet` + 4-View Spherical-TTA | `5000` | **97.96% Test** (**94.40% 5-Fold CV**) |
 
 ## 📂 Structure
 
@@ -20,7 +20,7 @@ This repository contains two complementary pipelines:
 │   ├── webapp/                 # Bilingual Flask web app (EN/FA)
 │   └── checkpoints/            # Prototypes, metrics, and plots (best_model.pth >100MB excluded)
 ├── lutjanus_5species/          # Specialized 5-species Lutjanus case study
-│   ├── src/                    # ProtoNet, classical HOG/LBP fusion, evaluation & figure scripts
+│   ├── src/                    # ScaleDetector, MixStyle, FDA, ProtoNet, benchmark & Stage figures
 │   ├── webapp/                 # Flask demo web app
 │   └── checkpoints/            # Prototypes (best_model.pth >100MB excluded)
 ├── requirements.txt

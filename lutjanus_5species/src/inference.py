@@ -8,6 +8,7 @@ import config
 from model import ProtoNet
 from features import extract_classical_features
 from dataset import apply_clahe_preprocessing
+from scale_detector import ScaleDetector
 
 
 class FishClassifier:
@@ -25,9 +26,12 @@ class FishClassifier:
         model_config = checkpoint["config"]
 
         self.use_clahe = model_config.get("use_clahe", config.USE_CLAHE)
+        self.use_roi_crop = model_config.get("use_roi_crop", getattr(config, "USE_ROI_CROP", True))
         self.use_tta = model_config.get("use_tta", config.USE_TTA)
         self.use_classical = model_config.get("use_classical", False)
+        self.use_mixstyle = model_config.get("use_mixstyle", False)
         self.image_size = tuple(model_config.get("image_size", config.IMAGE_SIZE))
+        self.detector = ScaleDetector(padding_ratio=0.12) if self.use_roi_crop else None
 
         self.model = ProtoNet(
             backbone_name=model_config["backbone"],
@@ -36,6 +40,7 @@ class FishClassifier:
             use_classical=self.use_classical,
             classical_in_dim=model_config.get("classical_in_dim", 0),
             classical_proj_dim=model_config.get("classical_proj_dim", config.CLASSICAL_PROJ_DIM),
+            use_mixstyle=self.use_mixstyle,
         )
         self.model.load_state_dict(checkpoint["model_state_dict"])
         self.model.to(self.device)
@@ -56,7 +61,10 @@ class FishClassifier:
         ])
 
     @torch.no_grad()
-    def extract_embedding(self, pil_img: Image.Image) -> torch.Tensor:
+    def extract_embedding(self, pil_img: Image.Image, apply_roi_crop: bool = None) -> torch.Tensor:
+        crop_flag = self.use_roi_crop if apply_roi_crop is None else apply_roi_crop
+        if crop_flag and self.detector is not None:
+            pil_img = self.detector.crop(pil_img, padding_ratio=0.12, square=True)
         if self.use_clahe:
             pil_img = apply_clahe_preprocessing(pil_img)
 

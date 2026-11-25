@@ -44,12 +44,17 @@ def main():
     mcfg = checkpoint["config"]
 
     use_clahe = mcfg.get("use_clahe", config.USE_CLAHE)
+    use_roi_crop = mcfg.get("use_roi_crop", getattr(config, "USE_ROI_CROP", True))
     use_tta = mcfg.get("use_tta", config.USE_TTA)
     use_classical = mcfg.get("use_classical", config.USE_CLASSICAL)
+    use_mixstyle = mcfg.get("use_mixstyle", False)
     img_size = tuple(mcfg.get("image_size", config.IMAGE_SIZE))
 
     # Extract prototypes ONLY from training split (no data leakage)
-    train_dataset = FishScaleDataset(root_dir=config.ROOT_DIR, split="train", seed=config.RANDOM_SEED, use_clahe=use_clahe)
+    train_dataset = FishScaleDataset(
+        root_dir=config.ROOT_DIR, split="train", seed=config.RANDOM_SEED,
+        use_clahe=use_clahe, use_roi_crop=use_roi_crop
+    )
     class_names = train_dataset.classes
 
     model = ProtoNet(
@@ -59,6 +64,7 @@ def main():
         use_classical=use_classical,
         classical_in_dim=mcfg.get("classical_in_dim", 0),
         classical_proj_dim=mcfg.get("classical_proj_dim", config.CLASSICAL_PROJ_DIM),
+        use_mixstyle=use_mixstyle,
     ).to(config.DEVICE)
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
@@ -90,6 +96,7 @@ def main():
         "prototypes": prototypes_tensor.to(config.DEVICE),
         "class_names": class_names,
         "use_clahe": use_clahe,
+        "use_roi_crop": use_roi_crop,
         "use_tta": use_tta,
         "image_size": img_size,
     }, save_path)

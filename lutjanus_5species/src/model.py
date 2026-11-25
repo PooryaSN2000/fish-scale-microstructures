@@ -4,11 +4,12 @@ import torch.nn.functional as F
 import torchvision.models as models
 
 import config
+from mixstyle import MixStyle
 
 
 class ProtoNet(nn.Module):
     """
-    Prototypical Network for Few-Shot Learning.
+    Prototypical Network for Few-Shot Learning with optional MixStyle domain generalization.
     Supports ResNet-18, EfficientNet-B0, and ConvNeXt-Tiny backbones.
     """
     def __init__(
@@ -17,8 +18,11 @@ class ProtoNet(nn.Module):
         use_pretrained: bool = True,
         embedding_dim: int = 256,
         use_classical: bool = False,
-        classical_in_dim: int = 6110,  # Default dimension for HOG+LBP features
-        classical_proj_dim: int = 128
+        classical_in_dim: int = 6110,
+        classical_proj_dim: int = 128,
+        use_mixstyle: bool = False,
+        mixstyle_p: float = 0.5,
+        mixstyle_alpha: float = 0.3,
     ):
         super(ProtoNet, self).__init__()
         
@@ -28,6 +32,9 @@ class ProtoNet(nn.Module):
             self.temperature = None
         self.backbone_name = backbone_name
         self.use_classical = use_classical
+        self.use_mixstyle = use_mixstyle and (backbone_name == "convnext_tiny")
+        self.mixstyle1 = MixStyle(p=mixstyle_p, alpha=mixstyle_alpha) if self.use_mixstyle else nn.Identity()
+        self.mixstyle2 = MixStyle(p=mixstyle_p, alpha=mixstyle_alpha) if self.use_mixstyle else nn.Identity()
         
         # 1. Initialize CNN backbone
         if backbone_name == "resnet18":
@@ -93,17 +100,24 @@ class ProtoNet(nn.Module):
     def forward_cnn(self, x: torch.Tensor) -> torch.Tensor:
         """
         Extract and project deep features from input images.
+        Applies interleaved MixStyle after early ConvNeXt stages when enabled.
         """
-        # Feature extraction
-        x = self.backbone(x)
-        
-        if self.backbone_name in ["efficientnet_b0", "convnext_tiny"]:
+        if self.use_mixstyle and self.backbone_name == "convnext_tiny":
+            x = self.backbone[0](x)
+            x = self.backbone[1](x)
+            x = self.mixstyle1(x)
+            x = self.backbone[2](x)
+            x = self.backbone[3](x)
+            x = self.mixstyle2(x)
+            for idx in range(4, len(self.backbone)):
+                x = self.backbone[idx](x)
             x = self.avgpool(x)
-            
-        # Flatten: (B, C, 1, 1) -> (B, C)
+        else:
+            x = self.backbone(x)
+            if self.backbone_name in ["efficientnet_b0", "convnext_tiny"]:
+                x = self.avgpool(x)
+
         x = torch.flatten(x, 1)
-        
-        # Project to embedding space
         return self.cnn_projection(x)
 
     def forward(self, x_images: torch.Tensor, x_classical: torch.Tensor = None, stage: int = 2) -> torch.Tensor:
@@ -111,8 +125,7 @@ class ProtoNet(nn.Module):
         Forward pass. Extracts embeddings. If stage=1, returns logits from the classifier head.
         If stage=2, returns the raw embeddings. Processes images in chunks to save VRAM.
         """
-        # Sequential embedding chunking to prevent CUDA OOM on large 40-way batches
-        chunk_size = 16
+        chunk_size = 25
         cnn_embeddings_list = []
         for i in range(0, x_images.size(0), chunk_size):
             chunk = x_images[i:i+chunk_size]
