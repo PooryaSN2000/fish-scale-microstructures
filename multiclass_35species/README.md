@@ -50,7 +50,7 @@ Evaluated on **163 unseen test micrographs** across all **57 marine fish species
 ## Directory Structure
 
 ```
-v4/
+multiclass_35species/
 ├── src/
 │   ├── config.py              # Central hyperparameters and paths
 │   ├── mixstyle.py            # Domain generalization module
@@ -83,16 +83,16 @@ v4/
 
 ### 1. Launch Web Application
 ```bash
-./myenv/bin/python3 v4/webapp/app.py
+./myenv/bin/python3 multiclass_35species/webapp/app.py
 ```
 Open `http://localhost:5004` in your browser.
 
 ### 2. Run Comprehensive Evaluation
 ```bash
-PYTHONPATH=v4/src ./myenv/bin/python3 v4/src/evaluate.py
+PYTHONPATH=multiclass_35species/src ./myenv/bin/python3 multiclass_35species/src/evaluate.py
 ```
 
 ### 3. Retrain Pipeline
 ```bash
-PYTHONPATH=. ./myenv/bin/python3 -m v4.src.train
+PYTHONPATH=. ./myenv/bin/python3 -m multiclass_35species.src.train
 ```

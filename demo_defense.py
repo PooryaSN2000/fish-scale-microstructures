@@ -22,16 +22,16 @@ import matplotlib.pyplot as plt
 
 # Auto-detect script directory and set up paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-if os.path.basename(SCRIPT_DIR) == "v2":
-    V2_DIR = SCRIPT_DIR
+if os.path.basename(SCRIPT_DIR) == "lutjanus_5species":
+    MODEL_5_DIR = SCRIPT_DIR
     ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 else:
-    V2_DIR = os.path.join(SCRIPT_DIR, "v2") if os.path.exists(os.path.join(SCRIPT_DIR, "v2")) else SCRIPT_DIR
+    MODEL_5_DIR = os.path.join(SCRIPT_DIR, "lutjanus_5species") if os.path.exists(os.path.join(SCRIPT_DIR, "lutjanus_5species")) else SCRIPT_DIR
     ROOT_DIR = SCRIPT_DIR
 
-SRC_DIR = os.path.join(V2_DIR, "src")
-CHECKPOINTS_DIR = os.path.join(V2_DIR, "checkpoints")
-SAMPLES_DIR = os.path.join(V2_DIR, "webapp/static/samples")
+SRC_DIR = os.path.join(MODEL_5_DIR, "src")
+CHECKPOINTS_DIR = os.path.join(MODEL_5_DIR, "checkpoints")
+SAMPLES_DIR = os.path.join(MODEL_5_DIR, "webapp/static/samples")
 
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)

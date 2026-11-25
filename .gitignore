@@ -17,12 +17,10 @@ myenv/
 *.pt
 *.bin
 *.onnx
-!v4/checkpoints/prototypes.pth
+!multiclass_35species/checkpoints/prototypes.pth
 
-# Legacy experiment versions (kept locally, excluded from git)
-v1/
-v2/
-v3/
+# Specialized local 5-species Lutjanidae study (kept locally, excluded from GitHub main repo)
+lutjanus_5species/
 
 # Dataset & Raw Microscopic Imagery (Excluded as requested)
 scale fish/
@@ -40,13 +38,9 @@ scale_fish/
 *.synctex.gz
 *.out
 *paper*
-*papper*
 paper/
-v1/papper/
-v1/research_paper.*
-v2/paper/
-v3/paper/
-v4/paper/
+lutjanus_5species/paper/
+multiclass_35species/paper/
 
 # Temporary data, logs, uploads
 uploads/

@@ -17,11 +17,11 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-# Auto-detect script directory and add v4/src to path
+# Auto-detect script directory and add multiclass_35species/src to path
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-V4_DIR = os.path.join(SCRIPT_DIR, "v4") if os.path.exists(os.path.join(SCRIPT_DIR, "v4")) else SCRIPT_DIR
-SRC_DIR = os.path.join(V4_DIR, "src")
-CHECKPOINTS_DIR = os.path.join(V4_DIR, "checkpoints")
+MODEL_DIR = os.path.join(SCRIPT_DIR, "multiclass_35species") if os.path.exists(os.path.join(SCRIPT_DIR, "multiclass_35species")) else SCRIPT_DIR
+SRC_DIR = os.path.join(MODEL_DIR, "src")
+CHECKPOINTS_DIR = os.path.join(MODEL_DIR, "checkpoints")
 
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)

@@ -154,11 +154,11 @@ Evaluation on the independent held-out test split of **142 micrographs across al
 
 ## 📂 Repository Architecture
 
-The repository is structured around Version 4:
+The repository is structured around the 35-species AquaLens v4 framework (`multiclass_35species/`):
 
 ```
 .
-├── v4/
+├── multiclass_35species/
 │   ├── src/
 │   │   ├── config.py                  # Global hyperparameters & device settings
 │   │   ├── model.py                   # FishScaleConvNeXtV4 with MixStyle integration
@@ -184,8 +184,10 @@ The repository is structured around Version 4:
 │   │   └── confusion_matrix.png       # 35-species normalized confusion matrix
 │   └── paper/
 │       ├── research_paper.tex         # Complete IEEE conference LaTeX manuscript
-│       ├── research_paper.pdf         # Compiled 8-page academic paper
+│       ├── research_paper.pdf         # Compiled academic paper
 │       └── img/                       # High-resolution publication figures
+├── demo_defense.py                    # Interactive defense presentation launcher
+├── demo_defense_multiclass.py         # Multi-class & novel-species One-Shot demo
 ├── requirements.txt                   # Production Python dependencies
 ├── .gitignore                         # Configured exclusion rules
 └── README.md                          # Comprehensive documentation
@@ -215,13 +217,13 @@ pip install -r requirements.txt
 To start the dedicated AquaLens v4 laboratory web server:
 
 ```bash
-python3 v4/webapp/app.py
+python3 multiclass_35species/webapp/app.py
 ```
 Open your browser and navigate to:
 **`http://localhost:5004`**
 
 Key Web Interface Features:
-- **100% Focused on Version 4:** Clean, uncluttered laboratory layout.
+- **100% Focused on 35-Species Production Model (AquaLens v4):** Clean, uncluttered laboratory layout.
 - **Bilingual (English & Persian):** Instant toggle with full RTL/LTR support.
 - **Two-Line Top-5 Presentation:** Line 1 displays the full unclipped scientific name; Line 2 displays similarity percentage and visual progress bar.
 - **Tri-View Visual Deck:** Simultaneous inspection of input micrograph, scale HUD bounding box, and localized Grad-CAM heatmap.
@@ -233,21 +235,21 @@ Key Web Interface Features:
 To benchmark the 35-species test set:
 
 ```bash
-python3 v4/src/evaluate.py
+python3 multiclass_35species/src/evaluate.py
 ```
 
 ### 4. Python API for Production Inference
 
 ```python
 import sys
-sys.path.insert(0, 'v4/src')
+sys.path.insert(0, 'multiclass_35species/src')
 from inference import FishClassifierV4
 
 # Initialize classifier with 7-View Spherical-TTA
 classifier = FishClassifierV4()
 
 # Predict species from an optical micrograph
-image_path = "v4/webapp/static/samples/Lutjanus_johni_Bloch_1792.jpg"
+image_path = "multiclass_35species/webapp/static/samples/Lutjanus_johni_Bloch_1792.jpg"
 pred_species, confidence, all_probs, sim, all_sims, meta = classifier.predict(
     image_path, auto_crop=True, return_metadata=True
 )

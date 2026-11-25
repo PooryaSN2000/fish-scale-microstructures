@@ -15,8 +15,8 @@ import scipy.stats as stats
 # Setup paths
 SRC_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(SRC_DIR, '../..'))
-PAPER_IMG_DIR = os.path.join(PROJECT_ROOT, 'v4/paper/img')
-CHECKPOINTS_DIR = os.path.join(PROJECT_ROOT, 'v4/checkpoints')
+PAPER_IMG_DIR = os.path.join(PROJECT_ROOT, 'multiclass_35species/paper/img')
+CHECKPOINTS_DIR = os.path.join(PROJECT_ROOT, 'multiclass_35species/checkpoints')
 os.makedirs(PAPER_IMG_DIR, exist_ok=True)
 os.makedirs(CHECKPOINTS_DIR, exist_ok=True)
 
@@ -83,7 +83,7 @@ def generate_gradcam_gallery(classifier, detector, explainer):
     
     if len(selected_samples) < 4:
         # Fallback to sample dir
-        sample_dir = os.path.join(PROJECT_ROOT, "v4/webapp/static/samples")
+        sample_dir = os.path.join(PROJECT_ROOT, "multiclass_35species/webapp/static/samples")
         files = os.listdir(sample_dir)
         for f in files[:4]:
             selected_samples.append((os.path.join(sample_dir, f), f.replace(".jpg", "").replace("_", " "), "Marine Teleost", "Circuli Focus"))
@@ -596,7 +596,7 @@ def main():
     generate_ablation_chart()
     generate_class_performance(classifier, test_loader, classes, device)
     generate_confusion_matrix(classifier, test_loader, classes, device)
-    print("\n[Complete] All 7 publication figures successfully generated in v4/paper/img/!")
+    print("\n[Complete] All 7 publication figures successfully generated in multiclass_35species/paper/img/!")
 
 if __name__ == '__main__':
     main()
