@@ -96,21 +96,54 @@
       "med": 0.8738,
       "tail": 0.83
     },
+    "ood_benchmark": {
+      "n_id": 142,
+      "n_ood": 98,
+      "n_unseen_fish": 95,
+      "n_external_tif": 3,
+      "raw_max_sim_auroc": 0.86,
+      "raw_fpr_at_90tpr": 0.4286,
+      "maha_384_auroc": 0.8942,
+      "maha_fpr_at_90tpr": 0.2959,
+      "fused_ood_auroc": 0.8915,
+      "fused_fpr_at_90tpr": 0.2959,
+      "id_mean_maha384": 22.16,
+      "ood_mean_maha384": 38.5,
+      "id_in_group_pct": 83.8,
+      "ood_flagged_non_in_group_pct": 82.65,
+      "ood_strict_out_of_group_pct": 51.02,
+      "tif_all_rejected": true
+    },
     "ood_tif_samples": [
       {
+        "source": "external_tif",
         "file": "112-4+8.tif",
         "max_sim": 0.7583,
-        "closest_species": "Lutjanus lemniscatus (Valenciennes, 1828)"
+        "closest_species": "Lutjanus lemniscatus (Valenciennes, 1828)",
+        "maha_dist": 38.39,
+        "fused_ood_z": -1.936,
+        "in_domain_score": 56.4,
+        "membership": "out_of_group"
       },
       {
+        "source": "external_tif",
         "file": "120-5-4.tif",
         "max_sim": 0.7605,
-        "closest_species": "Saurida tumbil (Bloch, 1975)"
+        "closest_species": "Saurida tumbil (Bloch, 1975)",
+        "maha_dist": 41.14,
+        "fused_ood_z": -2.184,
+        "in_domain_score": 49.5,
+        "membership": "out_of_group"
       },
       {
+        "source": "external_tif",
         "file": "163-4-22.tif",
         "max_sim": 0.7489,
-        "closest_species": "Drepane punctata(linnaeus,1758)"
+        "closest_species": "Drepane punctata(linnaeus,1758)",
+        "maha_dist": 43.19,
+        "fused_ood_z": -2.398,
+        "in_domain_score": 43.4,
+        "membership": "out_of_group"
       }
     ],
     "ood_tif_mean_max_sim": 0.7559

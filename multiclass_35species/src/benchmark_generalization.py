@@ -8,7 +8,7 @@ import numpy as np
 from PIL import Image, ImageEnhance, ImageFilter
 from scipy import stats
 from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import f1_score, accuracy_score
+from sklearn.metrics import f1_score, accuracy_score, roc_auc_score, roc_curve
 
 import torch
 import torch.nn as nn
@@ -154,20 +154,85 @@ def run_stress_ablation_and_stats(clf: FishClassifierV4):
     pooled_sd = np.sqrt(((len(intra_np) - 1) * np.var(intra_np, ddof=1) + (len(inter_np) - 1) * np.var(inter_np, ddof=1)) / (len(intra_np) + len(inter_np) - 2))
     cohen_d = float((np.mean(intra_np) - np.mean(inter_np)) / (pooled_sd + 1e-8))
 
-    # OOD External TIF check
-    ood_tifs = []
+    # Out-of-Distribution (OOD) Dual-Manifold Benchmark: 142 ID Test vs 95 Unseen Fish + 3 External TIFs
+    id_ood_recs = []
+    for p in test_ds.image_paths:
+        _, _, _, ms, _, meta = clf.predict(p, auto_crop=True, return_metadata=True)
+        id_ood_recs.append({
+            "max_sim": float(ms),
+            "maha_dist": float(meta["maha_dist"]) if meta.get("maha_dist") is not None else 0.0,
+            "fused_ood_z": float(meta["fused_ood_z"]) if meta.get("fused_ood_z") is not None else 0.0,
+            "in_domain_score": float(meta["in_domain_score"]),
+            "membership": meta["membership"],
+        })
+
+    ood_tifs, unseen_ood_recs = [], []
+    novel_dict = get_unseen_novel_species(config.ROOT_DIR, classes)
+    for sp, paths in sorted(novel_dict.items()):
+        for p in paths:
+            pred_sp, _, _, ms, _, meta = clf.predict(p, auto_crop=True, return_metadata=True)
+            unseen_ood_recs.append({
+                "source": "unseen_species",
+                "species": sp,
+                "max_sim": round(float(ms), 4),
+                "maha_dist": meta.get("maha_dist"),
+                "fused_ood_z": meta.get("fused_ood_z"),
+                "in_domain_score": meta.get("in_domain_score"),
+                "membership": meta.get("membership"),
+            })
+
     test_dir = os.path.join(os.path.dirname(config.ROOT_DIR), "test_dataset")
     if os.path.exists(test_dir):
         for f in sorted(os.listdir(test_dir)):
             if f.lower().endswith((".tif", ".tiff", ".jpg", ".png")):
-                emb = clf.extract_embedding(load_rgb_image(os.path.join(test_dir, f)), use_tta=True)
-                sims = clf.score_embedding(emb)
-                top_i = int(np.argmax(sims))
+                pred_sp, _, _, ms, _, meta = clf.predict(os.path.join(test_dir, f), auto_crop=True, return_metadata=True)
                 ood_tifs.append({
+                    "source": "external_tif",
                     "file": f,
-                    "max_sim": round(float(sims[top_i]), 4),
-                    "closest_species": classes[top_i],
+                    "max_sim": round(float(ms), 4),
+                    "closest_species": pred_sp,
+                    "maha_dist": meta.get("maha_dist"),
+                    "fused_ood_z": meta.get("fused_ood_z"),
+                    "in_domain_score": meta.get("in_domain_score"),
+                    "membership": meta.get("membership"),
                 })
+
+    all_ood_recs = unseen_ood_recs + ood_tifs
+    y_ood = np.array([1] * len(id_ood_recs) + [0] * len(all_ood_recs))
+    def _ood_roc(id_vals, ood_vals):
+        scores = np.array(id_vals + ood_vals, dtype=np.float64)
+        auc = float(roc_auc_score(y_ood, scores))
+        fpr, tpr, _ = roc_curve(y_ood, scores)
+        fpr90 = float(fpr[min(len(fpr) - 1, np.searchsorted(tpr, 0.90))])
+        return round(auc, 4), round(fpr90, 4)
+
+    raw_auc, raw_f90 = _ood_roc([r["max_sim"] for r in id_ood_recs], [r["max_sim"] for r in all_ood_recs])
+    maha_auc, maha_f90 = _ood_roc([-r["maha_dist"] for r in id_ood_recs], [-r["maha_dist"] for r in all_ood_recs])
+    fused_auc, fused_f90 = _ood_roc([r["in_domain_score"] for r in id_ood_recs], [r["in_domain_score"] for r in all_ood_recs])
+
+    ood_summary = {
+        "n_id": len(id_ood_recs),
+        "n_ood": len(all_ood_recs),
+        "n_unseen_fish": len(unseen_ood_recs),
+        "n_external_tif": len(ood_tifs),
+        "raw_max_sim_auroc": raw_auc,
+        "raw_fpr_at_90tpr": raw_f90,
+        "maha_384_auroc": maha_auc,
+        "maha_fpr_at_90tpr": maha_f90,
+        "fused_ood_auroc": fused_auc,
+        "fused_fpr_at_90tpr": fused_f90,
+        "id_mean_maha384": round(float(np.mean([r["maha_dist"] for r in id_ood_recs])), 2),
+        "ood_mean_maha384": round(float(np.mean([r["maha_dist"] for r in all_ood_recs])), 2),
+        "id_in_group_pct": round(100.0 * sum(1 for r in id_ood_recs if r["membership"] == "in_group") / len(id_ood_recs), 2),
+        "ood_flagged_non_in_group_pct": round(100.0 * sum(1 for r in all_ood_recs if r["membership"] != "in_group") / len(all_ood_recs), 2),
+        "ood_strict_out_of_group_pct": round(100.0 * sum(1 for r in all_ood_recs if r["membership"] == "out_of_group") / len(all_ood_recs), 2),
+        "tif_all_rejected": all(r["membership"] != "in_group" for r in ood_tifs) if ood_tifs else None,
+    }
+    print(
+        f"[OOD Detection] {ood_summary['n_id']} ID vs {ood_summary['n_ood']} OOD: "
+        f"Raw AUROC={raw_auc:.4f} -> Maha384 AUROC={maha_auc:.4f} -> Fused={fused_auc:.4f} | "
+        f"Flagged OOD={ood_summary['ood_flagged_non_in_group_pct']}%"
+    )
 
     stats_summary = {
         "intra_mean": round(float(np.mean(intra_np)), 4),
@@ -182,6 +247,7 @@ def run_stress_ablation_and_stats(clf: FishClassifierV4):
         "cohort_intra_means": {
             k: round(float(np.mean(v)), 4) for k, v in cohort_stats_map.items() if v
         },
+        "ood_benchmark": ood_summary,
         "ood_tif_samples": ood_tifs,
         "ood_tif_mean_max_sim": round(float(np.mean([x["max_sim"] for x in ood_tifs])), 4) if ood_tifs else None,
     }

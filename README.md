@@ -8,8 +8,8 @@ This repository contains two complementary pipelines:
 
 | Directory | Scope | Backbone & Method | Web Port | Key Result |
 | :--- | :--- | :--- | :---: | :--- |
-| **`multiclass_35species/`** | **35 Marine Species + Open-Set** (804 micrographs, $\ge 7$ samples/species; 21 unseen reserved) | `ScaleDetector` + ConvNeXt-Tiny + `MixStyle` + `FDA` + `CB-ArcFace` + 7-View Spherical-TTA | `5004` | **92.25% Top-1** (**95.07% Top-3**, **91.42% 5-Fold CV**) |
-| **`lutjanus_5species/`** | **5 *Lutjanus* Species** (233 micrographs, *Lutjanidae* case study) | `ScaleDetector` + ConvNeXt-Tiny + `MixStyle` + `FDA` + Episodic `ProtoNet` + 4-View Spherical-TTA | `5000` | **97.96% Test** (**94.40% 5-Fold CV**) |
+| **`multiclass_35species/`** | **35 Marine Species + Open-Set** (804 micrographs, $\ge 7$ samples/species; 21 unseen reserved) | `ScaleDetector` + ConvNeXt-Tiny + `MixStyle` + `FDA` + `CB-ArcFace` + 7-View Spherical-TTA + 384-d Mahalanobis OOD + Top-3 WebApp | `5004` | **92.25% Top-1** (**95.07% Top-3**, **0.8942 OOD AUROC**, **91.42% 5-Fold CV**) |
+| **`lutjanus_5species/`** | **5 *Lutjanus* Species** (233 micrographs, *Lutjanidae* case study) | `ScaleDetector` + ConvNeXt-Tiny + `MixStyle` + `FDA` + Episodic `ProtoNet` + 4-View Spherical-TTA + 768-d Mahalanobis OOD + Top-3 WebApp | `5000` | **97.96% Test** (**0.9653 OOD AUROC**, **94.40% 5-Fold CV**) |
 
 ## 📂 Structure
 

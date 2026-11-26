@@ -97,9 +97,9 @@ class ProtoNet(nn.Module):
         # 4. Stage 1 Pre-training Classifier Head
         self.classifier_head = nn.Linear(self.final_embedding_dim, config.NUM_CLASSES)
 
-    def forward_cnn(self, x: torch.Tensor) -> torch.Tensor:
+    def extract_backbone_features(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Extract and project deep features from input images.
+        Extracts pooled pre-projection CNN features (B, 768 for ConvNeXt-Tiny).
         Applies interleaved MixStyle after early ConvNeXt stages when enabled.
         """
         if self.use_mixstyle and self.backbone_name == "convnext_tiny":
@@ -117,8 +117,10 @@ class ProtoNet(nn.Module):
             if self.backbone_name in ["efficientnet_b0", "convnext_tiny"]:
                 x = self.avgpool(x)
 
-        x = torch.flatten(x, 1)
-        return self.cnn_projection(x)
+        return torch.flatten(x, 1)
+
+    def forward_cnn(self, x: torch.Tensor) -> torch.Tensor:
+        return self.cnn_projection(self.extract_backbone_features(x))
 
     def forward(self, x_images: torch.Tensor, x_classical: torch.Tensor = None, stage: int = 2) -> torch.Tensor:
         """

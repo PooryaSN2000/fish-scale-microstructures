@@ -17,19 +17,19 @@
   ],
   "test_per_stage_auc": [
     1.0,
-    0.9878,
+    0.9898,
     1.0,
-    0.9855,
+    1.0,
     1.0
   ],
   "test_per_stage_ap": [
     1.0,
-    0.9786,
+    0.9812,
     1.0,
-    0.8056,
+    1.0,
     1.0
   ],
   "all_total": 233,
-  "all_correct": 231,
-  "all_accuracy_pct": 99.14
+  "all_correct": 228,
+  "all_accuracy_pct": 97.85
 }

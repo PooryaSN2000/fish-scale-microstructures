@@ -27,9 +27,9 @@
                     <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
                     <h2>Drag & Drop your image here</h2>
                     <p>or click to browse from your device</p>
-                    <span class="file-info">Supports JPG, PNG, BMP</span>
+                    <span class="file-info">Supports JPG, PNG, BMP, TIF/TIFF</span>
                 </div>
-                <input type="file" id="file-input" accept="image/*" hidden>
+                <input type="file" id="file-input" accept="image/*,.tif,.tiff" hidden>
             </div>
             
             <div id="image-preview-container" class="hidden">
@@ -94,15 +94,36 @@
                 </div>
             </div>
             
-            <!-- 2. Primary Match Details -->
+            <!-- 2. Primary Match & Top-3 Shortlist Consensus -->
             <div class="primary-result" id="primary-result-box">
                 <div>
-                    <span style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.2rem;">Closest Identified Species:</span>
+                    <span style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.2rem;">Closest Identified Species &amp; Stage:</span>
                     <div class="species-name" id="predicted-class">Lutjanus johni</div>
+                    <div id="manifold-metrics-line" style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.35rem;"></div>
                 </div>
                 <div class="confidence-badge" id="confidence-badge">
                     <i class="fa-solid fa-chart-pie" id="conf-icon"></i> 
                     <span id="predicted-confidence">98.5%</span> Match
+                </div>
+            </div>
+
+            <!-- 2.5 Top-3 Candidate Consensus Strip & Visual Audit (HUD + Grad-CAM) -->
+            <div id="top3-panel" style="margin: 1rem 0; padding: 0.9rem 1rem; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.65rem;">
+                    <strong style="font-size:0.95rem;"><i class="fa-solid fa-ranking-star"></i> Top-3 Shortlist Consensus (گزینه‌های ۱ تا ۳ برتر)</strong>
+                    <span id="top3-cum-pill" style="font-size:0.8rem; padding:0.2rem 0.65rem; border-radius:99px; background:rgba(16,185,129,0.15); color:#10b981; font-weight:600;">Top-3 Confidence: -</span>
+                </div>
+                <div id="top3-cards-row" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:0.6rem;"></div>
+            </div>
+
+            <div id="lutjanus-visual-deck" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:0.75rem; margin-bottom:1.1rem;">
+                <div style="text-align:center;">
+                    <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.35rem;">Scale Saliency HUD</div>
+                    <img id="hud-overlay-img" src="" alt="HUD" style="width:100%; border-radius:10px; border:1px solid rgba(255,255,255,0.12);">
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:0.8rem; color:#38bdf8; font-weight:600; margin-bottom:0.35rem;">Localized Grad-CAM Heatmap</div>
+                    <img id="gradcam-overlay-img" src="" alt="Grad-CAM" style="width:100%; border-radius:10px; border:1px solid rgba(56,189,248,0.35);">
                 </div>
             </div>
             
@@ -205,20 +226,21 @@
         });
 
         function handleFile(file) {
-            if (!file.type.startsWith('image/')) return;
-            
+            const isTif = /\.(tif|tiff)$/i.test(file.name);
+            if (!file.type.startsWith('image/') && !isTif) return;
             document.querySelector('.sample-demo-container').style.display = 'none';
-
-            // Show preview
+            dropZone.classList.add('hidden');
+            imagePreviewContainer.classList.remove('hidden');
+            resultSection.classList.add('hidden');
+            gallerySection.classList.add('hidden');
+            if (isTif) {
+                imagePreview.src = '';
+                uploadAndPredict(file);
+                return;
+            }
             const reader = new FileReader();
             reader.onload = (e) => {
                 imagePreview.src = e.target.result;
-                dropZone.classList.add('hidden');
-                imagePreviewContainer.classList.remove('hidden');
-                resultSection.classList.add('hidden');
-                gallerySection.classList.add('hidden'); // Hide gallery during processing
-                
-                // Upload immediately
                 uploadAndPredict(file);
             };
             reader.readAsDataURL(file);
@@ -301,9 +323,36 @@
                 confIcon.className = 'fa-solid fa-ban';
             }
             
-            // 2. Primary Match Details
-            predClass.textContent = data.prediction;
-            predConf.textContent = data.overall_similarity + '% Sim';
+            // 2. Primary Match & Top-3 Shortlist Consensus + Manifold Diagnostics
+            if (data.preview_image) imagePreview.src = data.preview_image;
+            const hudImg = document.getElementById('hud-overlay-img');
+            const camImg = document.getElementById('gradcam-overlay-img');
+            if (hudImg && data.crop_overlay_image) hudImg.src = data.crop_overlay_image;
+            if (camImg && data.gradcam_image) camImg.src = data.gradcam_image;
+
+            predClass.textContent = data.prediction_stage ? `${data.prediction_stage}: ${data.prediction}` : data.prediction;
+            predConf.textContent = `${data.overall_similarity}% Sim`;
+            const manifoldEl = document.getElementById('manifold-metrics-line');
+            if (manifoldEl) {
+                manifoldEl.textContent = `Manifold Score: ${data.in_domain_score}% | Mahalanobis Dist: ${data.maha_dist ?? '-'} (p95 cutoff: ${data.maha_p95_cutoff ?? '-'}) | Prob: ${data.confidence}%`;
+            }
+
+            const top3Row = document.getElementById('top3-cards-row');
+            const top3Cum = document.getElementById('top3-cum-pill');
+            if (top3Cum && data.top3_cumulative_confidence !== undefined) {
+                top3Cum.textContent = `Top-3 Cumulative Prob: ${data.top3_cumulative_confidence}%`;
+            }
+            if (top3Row && data.top3_candidates) {
+                top3Row.innerHTML = '';
+                data.top3_candidates.forEach(item => {
+                    const card = document.createElement('div');
+                    card.style.cssText = 'padding:0.65rem 0.75rem; border-radius:8px; background:rgba(15,23,42,0.45); border:1px solid ' + (item.rank === 1 ? '#10b981' : 'rgba(255,255,255,0.12)');
+                    card.innerHTML = `<div style="font-size:0.78rem; color:${item.rank === 1 ? '#10b981' : '#94a3b8'}; font-weight:700;">#${item.rank} &bull; ${item.stage}</div>`
+                        + `<div style="font-size:0.85rem; font-weight:600; margin:0.2rem 0;">${item.species_name}</div>`
+                        + `<div style="font-size:0.78rem; color:#cbd5e1;">Sim: ${item.similarity}% &bull; Prob: ${item.probability}%</div>`;
+                    top3Row.appendChild(card);
+                });
+            }
             
             // 3. Per-Species Similarity Breakdown Bars
             barsContainer.innerHTML = '';

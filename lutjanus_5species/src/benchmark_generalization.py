@@ -7,7 +7,7 @@ import numpy as np
 from PIL import Image, ImageEnhance, ImageFilter
 from scipy import stats
 from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import f1_score, accuracy_score, precision_recall_fscore_support
+from sklearn.metrics import f1_score, accuracy_score, precision_recall_fscore_support, roc_auc_score, roc_curve
 
 import torch
 import torch.nn.functional as F
@@ -267,25 +267,79 @@ def run_stress_and_background_tests():
     # Pairwise 5x5 Stage Centroid Similarity Matrix
     pairwise_mat = torch.matmul(ordered_protos, ordered_protos.t()).cpu().numpy().tolist()
 
-    # Out-of-Group Non-Lutjanus Check (test_dataset + 4 other marine families)
+    # Out-of-Distribution (OOD) Detection Benchmark: 49 ID Lutjanus vs Non-Lutjanus taxa + external TIFs + blank controls
+    id_ood_records = []
+    for img_path in test_ds.image_paths:
+        res = clf.predict_detailed(img_path, return_visuals=False)
+        id_ood_records.append({
+            "file": os.path.basename(img_path),
+            "sim": float(res["overall_similarity"]) / 100.0,
+            "maha_dist": float(res["maha_dist"]) if res.get("maha_dist") is not None else 0.0,
+            "fused_ood_z": float(res["fused_ood_z"]) if res.get("fused_ood_z") is not None else 0.0,
+            "in_domain_score": float(res["in_domain_score"]),
+            "membership": res["membership"],
+        })
+
     ood_paths = []
     test_dir = os.path.join(os.path.dirname(config.ROOT_DIR), "test_dataset")
     if os.path.exists(test_dir):
         for f in sorted(os.listdir(test_dir)):
             if f.lower().endswith((".tif", ".tiff", ".jpg", ".png")):
                 ood_paths.append(("External TIF", os.path.join(test_dir, f)))
-    for fam in ["Upeneus sulphureusCuvier, 1829", "Platycephalus indicus (linnaeus, 1758)", "Gerres filamentosus Cuvier,1829", "Scolopsis vosmeri (Bloch, 1792)"]:
+    for fam in sorted(os.listdir(config.ROOT_DIR)):
+        if "lutjanus" in fam.lower():
+            continue
         fd = os.path.join(config.ROOT_DIR, fam)
-        if os.path.exists(fd):
+        if os.path.isdir(fd):
             fs = sorted([f for f in os.listdir(fd) if f.lower().endswith((".jpg", ".jpeg", ".png"))])
-            for f in fs[:3]:
-                ood_paths.append((fam.split()[0], os.path.join(fd, f)))
+            if fs:
+                ood_paths.append((fam.split()[0], os.path.join(fd, fs[0])))
 
-    ood_max_sims = []
+    ood_records = []
     for label, p in ood_paths:
-        emb = clf.extract_embedding(Image.open(p).convert("RGB"))
-        ms = float(torch.matmul(emb, ordered_protos.t()).max().item())
-        ood_max_sims.append({"source": label, "file": os.path.basename(p), "max_sim": round(ms, 4)})
+        res = clf.predict_detailed(p, return_visuals=False)
+        ood_records.append({
+            "source": label,
+            "file": os.path.basename(p),
+            "max_sim": round(float(res["overall_similarity"]) / 100.0, 4),
+            "maha_dist": res.get("maha_dist"),
+            "fused_ood_z": res.get("fused_ood_z"),
+            "in_domain_score": res.get("in_domain_score"),
+            "membership": res.get("membership"),
+        })
+
+    y_ood = np.array([1] * len(id_ood_records) + [0] * len(ood_records))
+    def _auroc_fpr90(id_vals, ood_vals):
+        scores = np.array(id_vals + ood_vals, dtype=np.float64)
+        auroc = float(roc_auc_score(y_ood, scores))
+        fpr, tpr, _ = roc_curve(y_ood, scores)
+        fpr90 = float(fpr[min(len(fpr) - 1, np.searchsorted(tpr, 0.90))])
+        return round(auroc, 4), round(fpr90, 4)
+
+    raw_auroc, raw_fpr90 = _auroc_fpr90([r["sim"] for r in id_ood_records], [r["max_sim"] for r in ood_records])
+    maha_auroc, maha_fpr90 = _auroc_fpr90([-r["maha_dist"] for r in id_ood_records], [-r["maha_dist"] for r in ood_records])
+    fused_auroc, fused_fpr90 = _auroc_fpr90([r["in_domain_score"] for r in id_ood_records], [r["in_domain_score"] for r in ood_records])
+
+    ood_summary = {
+        "n_id": len(id_ood_records),
+        "n_ood": len(ood_records),
+        "raw_max_sim_auroc": raw_auroc,
+        "raw_fpr_at_90tpr": raw_fpr90,
+        "maha_768_auroc": maha_auroc,
+        "maha_fpr_at_90tpr": maha_fpr90,
+        "fused_ood_auroc": fused_auroc,
+        "fused_fpr_at_90tpr": fused_fpr90,
+        "id_mean_maha768": round(float(np.mean([r["maha_dist"] for r in id_ood_records])), 2),
+        "ood_mean_maha768": round(float(np.mean([r["maha_dist"] for r in ood_records])), 2),
+        "ood_flagged_non_in_group_pct": round(100.0 * sum(1 for r in ood_records if r["membership"] != "in_group") / max(1, len(ood_records)), 2),
+        "ood_strict_out_of_group_pct": round(100.0 * sum(1 for r in ood_records if r["membership"] == "out_of_group") / max(1, len(ood_records)), 2),
+    }
+    print(
+        f"OOD Detection ({ood_summary['n_id']} ID vs {ood_summary['n_ood']} OOD): "
+        f"Raw AUROC={raw_auroc:.4f} (FPR@90={raw_fpr90:.3f}) -> "
+        f"Maha768={maha_auroc:.4f} -> Fused OOD AUROC={fused_auroc:.4f} (FPR@90={fused_fpr90:.3f}) | "
+        f"Flagged={ood_summary['ood_flagged_non_in_group_pct']}%"
+    )
 
     stats_summary = {
         "intra_mean": round(float(np.mean(intra_np)), 4),
@@ -297,8 +351,9 @@ def run_stress_and_background_tests():
         "mannwhitney_p": float(u_pval),
         "cohen_d": round(cohen_d, 2),
         "pairwise_centroid_similarity": [[round(v, 3) for v in row] for row in pairwise_mat],
-        "ood_mean_max_sim": round(float(np.mean([x["max_sim"] for x in ood_max_sims])), 4) if ood_max_sims else None,
-        "ood_samples": ood_max_sims,
+        "ood_mean_max_sim": round(float(np.mean([x["max_sim"] for x in ood_records])), 4) if ood_records else None,
+        "ood_benchmark": ood_summary,
+        "ood_samples": ood_records[:16],
     }
     print(f"Statistical Separation: Intra={stats_summary['intra_mean']:.3f}+-{stats_summary['intra_std']:.3f} vs Inter={stats_summary['inter_mean']:.3f}+-{stats_summary['inter_std']:.3f} | t={stats_summary['welch_t']} | Cohen d={stats_summary['cohen_d']}")
     return stress_results, stats_summary

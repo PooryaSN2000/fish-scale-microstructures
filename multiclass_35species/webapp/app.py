@@ -96,7 +96,7 @@ def predict():
 
     try:
         t0 = time.time()
-        pred_species, conf, _, sim, all_sims, meta = classifier_v4.predict(
+        pred_species, conf, all_probs, sim, all_sims, meta = classifier_v4.predict(
             filepath, auto_crop=auto_crop, return_metadata=True
         )
         cam_b64 = classifier_v4.explain(filepath, auto_crop=auto_crop)
@@ -113,31 +113,34 @@ def predict():
                 "rank": rank,
                 "species_name": sp_name,
                 "similarity": sp_sim,
+                "probability": round(all_probs.get(sp_name, 0.0) * 100, 1),
                 "genus": genus,
                 "is_custom": sp_name in classifier_v4.custom_species,
             })
 
+        top3_candidates = top5_list[:3]
         overall_sim = round(max(0.0, sim) * 100, 1)
         n_species = len(classifier_v4.class_names)
+        membership = meta.get("membership", "out_of_group")
+        in_domain_score = meta.get("in_domain_score", overall_sim)
+        maha_dist = meta.get("maha_dist")
+        maha_cutoff = meta.get("maha_cutoff")
 
-        if overall_sim >= 85.0:
-            membership = "in_group"
-            membership_title_fa = f"تطابق تاییدشده با پایگاه ({n_species} گونه)"
-            membership_title_en = f"Definite Match ({n_species} Covered Taxa)"
-            membership_desc_fa = "تشابه ساختاری ریزساختار پولک با مرکز گونه هدف در سطح اطمینان بالا قرار دارد."
-            membership_desc_en = "Scale microstructure demonstrates strong invariant alignment with the species prototype."
-        elif overall_sim >= 78.0:
-            membership = "borderline"
-            membership_title_fa = "تطابق بینابینی / نیازمند بررسی متخصص"
-            membership_title_en = "Borderline / Sibling Taxon Affinity"
-            membership_desc_fa = "تشابه در محدوده مرزی است؛ ممکن است گونه خواهر باشد یا نیاز به ثبت گونه جدید داشته باشد."
-            membership_desc_en = "Moderate similarity detected. Review candidate match or register as a novel species."
+        if membership == "in_group":
+            membership_title_fa = f"تطابق تاییدشده در منیفولد ({n_species} گونه)"
+            membership_title_en = f"Verified In-Domain Match ({n_species} Taxa)"
+            membership_desc_fa = f"هم‌ترازی قوی با پیش‌نمونه و فاصله ماهالانوبیس مجاز (امتیاز منیفولد: {in_domain_score}٪)."
+            membership_desc_en = f"Strong prototype alignment and manifold fit (In-Domain Score: {in_domain_score}%)."
+        elif membership == "borderline":
+            membership_title_fa = "تطابق مرزی / رقابت در ۳ گزینه برتر (Top-3)"
+            membership_title_en = "Borderline / Review Top-3 Candidates"
+            membership_desc_fa = f"نمونه نزدیک به مرز منیفولد است (امتیاز منیفولد: {in_domain_score}٪). گزینه‌های ۱ تا ۳ برتر را بررسی کرده یا در صورت نیاز گونه جدید ثبت کنید."
+            membership_desc_en = f"Near manifold boundary (Score: {in_domain_score}%). Review Top-3 shortlist or register as a novel species."
         else:
-            membership = "out_of_group"
-            membership_title_fa = f"گونه ناشناخته / خارج از {n_species} گونه فعلی"
+            membership_title_fa = f"گونه ناشناخته / خارج از {n_species} گونه فعلی (OOD)"
             membership_title_en = f"Novel / Out-of-Distribution Sample (Outside {n_species} Taxa)"
-            membership_desc_fa = "شباهت کمتر از آستانه اطمینان است. می‌توانید بدون آموزش مجدد، همین تصویر را به عنوان گونه جدید ثبت کنید."
-            membership_desc_en = "Similarity falls below confidence cutoff. Register this sample immediately as a novel species without retraining."
+            membership_desc_fa = f"تصویر خارج از منیفولد آماری گونه‌های شناخته‌شده است (امتیاز منیفولد: {in_domain_score}٪). می‌توانید بدون آموزش مجدد، همین تصویر را ثبت کنید."
+            membership_desc_en = f"Outside learned taxonomic manifold (In-Domain Score: {in_domain_score}%). Register directly as a novel species without retraining."
 
         genus = pred_species.split()[0] if pred_species else ""
 
@@ -147,6 +150,9 @@ def predict():
             "prediction": pred_species,
             "genus": genus,
             "overall_similarity": overall_sim,
+            "in_domain_score": in_domain_score,
+            "maha_dist": maha_dist,
+            "maha_cutoff": maha_cutoff,
             "confidence": round(conf * 100, 1),
             "membership": membership,
             "membership_title_fa": membership_title_fa,
@@ -157,6 +163,10 @@ def predict():
             "is_custom_species": meta.get("is_custom_species", False),
             "uncertainty_reason": meta.get("uncertainty_reason", ""),
             "margin": meta.get("margin", 0.0),
+            "top3_candidates": top3_candidates,
+            "top3_cumulative_confidence": meta.get("top3_cumulative_confidence", 0.0),
+            "top3_consensus_genus": meta.get("top3_consensus_genus", genus),
+            "top3_consensus_count": meta.get("top3_consensus_count", 1),
             "top_matches": top5_list,
             "preview_image": preview_b64,
             "crop_overlay_image": meta.get("crop_overlay_image"),

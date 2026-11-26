@@ -18,40 +18,50 @@ class ScaleDetector:
             padding_ratio = self.padding_ratio
 
         w, h = pil_image.size
-        gray = np.array(pil_image.convert("L"), dtype=float)
+        max_side = 768
+        scale_down = min(1.0, max_side / max(w, h))
+        if scale_down < 1.0:
+            dw, dh = max(32, int(round(w * scale_down))), max(32, int(round(h * scale_down)))
+            gray = np.array(pil_image.convert("L").resize((dw, dh), Image.Resampling.BILINEAR), dtype=float)
+        else:
+            dw, dh = w, h
+            gray = np.array(pil_image.convert("L"), dtype=float)
 
         # 1. Sobel high-frequency texture saliency (circuli & radii vs smooth slide)
         grad_x = ndimage.sobel(gray, axis=1)
         grad_y = ndimage.sobel(gray, axis=0)
-        grad_smooth = ndimage.gaussian_filter(np.hypot(grad_x, grad_y), sigma=3.5)
+        grad_smooth = ndimage.gaussian_filter(np.hypot(grad_x, grad_y), sigma=3.0)
 
-        # 2. Corner-background luminance baseline
-        ps = min(30, max(5, h // 15), max(5, w // 15))
-        corners = np.concatenate([
-            gray[:ps, :ps].ravel(),
-            gray[:ps, -ps:].ravel(),
-            gray[-ps:, :ps].ravel(),
-            gray[-ps:, -ps:].ravel(),
-        ])
-        bg_val = np.median(corners)
-        diff_smooth = ndimage.gaussian_filter(np.abs(gray - bg_val), sigma=3.5)
+        # 2. Corner-background luminance baseline (immune to bright rulers in 1 corner)
+        ps = min(25, max(5, dh // 15), max(5, dw // 15))
+        corner_meds = [
+            float(np.median(gray[:ps, :ps])),
+            float(np.median(gray[:ps, -ps:])),
+            float(np.median(gray[-ps:, :ps])),
+            float(np.median(gray[-ps:, -ps:])),
+        ]
+        bg_val = float(np.percentile(corner_meds, 25))
+        diff_smooth = ndimage.gaussian_filter(np.abs(gray - bg_val), sigma=3.0)
 
-        # 3. Fused saliency + Otsu threshold
-        sal = 0.6 * (grad_smooth / (grad_smooth.max() + 1e-6)) + 0.4 * (diff_smooth / (diff_smooth.max() + 1e-6))
+        # 3. Percentile-clipped fused saliency + Otsu threshold
+        p_grad = max(float(np.percentile(grad_smooth, 98.5)), 1e-6)
+        p_diff = max(float(np.percentile(diff_smooth, 98.5)), 1e-6)
+        sal = 0.55 * np.clip(grad_smooth / p_grad, 0.0, 1.0) + 0.45 * np.clip(diff_smooth / p_diff, 0.0, 1.0)
         th = filters.threshold_otsu(sal)
-        binary = sal > (th * 0.72)
+        binary = sal > (th * 0.65)
 
         # 4. Suppress microscope metadata banners & edge lines (4% top/bottom, 2% left/right)
-        by, bx = max(6, int(h * 0.04)), max(6, int(w * 0.02))
+        by, bx = max(4, int(dh * 0.04)), max(4, int(dw * 0.02))
         binary[:by, :] = False
         binary[-by:, :] = False
         binary[:, :bx] = False
         binary[:, -bx:] = False
 
         # 5. Morphological hole filling & small noise removal (0.7% min area handles small S1 scales)
-        binary = morphology.closing(binary, morphology.disk(12))
+        disk_r = max(4, int(round(12 * min(dw, dh) / 1024.0)))
+        binary = morphology.closing(binary, morphology.disk(disk_r))
         binary = ndimage.binary_fill_holes(binary)
-        min_area = int(h * w * 0.007)
+        min_area = int(dh * dw * 0.007)
         try:
             binary = morphology.remove_small_objects(binary, max_size=min_area)
         except TypeError:
@@ -69,12 +79,14 @@ class ScaleDetector:
             aspect = max(rh / (rw + 1e-5), rw / (rh + 1e-5))
             if aspect < 3.2:
                 cy, cx = p.centroid
-                dist_c = np.hypot(cy - h / 2.0, cx - w / 2.0) / np.hypot(h / 2.0, w / 2.0)
+                dist_c = np.hypot(cy - dh / 2.0, cx - dw / 2.0) / np.hypot(dh / 2.0, dw / 2.0)
                 score = p.area * (1.0 - 0.55 * dist_c)
                 valid.append((score, p))
 
         target = max(valid, key=lambda x: x[0])[1] if valid else max(props, key=lambda x: x.area)
         minr, minc, maxr, maxc = target.bbox
+        sx, sy = w / float(dw), h / float(dh)
+        minr, minc, maxr, maxc = int(round(minr * sy)), int(round(minc * sx)), int(round(maxr * sy)), int(round(maxc * sx))
 
         ph, pw = int((maxr - minr) * padding_ratio), int((maxc - minc) * padding_ratio)
         x1 = max(0, minc - pw)

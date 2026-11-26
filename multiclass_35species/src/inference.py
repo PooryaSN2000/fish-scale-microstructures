@@ -77,6 +77,8 @@ class FishClassifierV4:
         proto_dict = torch.load(self.prototypes_path, map_location=self.device)
         self.class_names = list(proto_dict["class_names"])
         self.prototypes = F.normalize(proto_dict["prototypes"].to(self.device), p=2, dim=1)
+        self.prec_384 = proto_dict["prec_384"].cpu().numpy() if "prec_384" in proto_dict else None
+        self.ood_stats = proto_dict.get("ood_stats", None)
         self.subcenters = proto_dict.get("subcenters", {})
         self.custom_species = set(proto_dict.get("custom_species", []))
         self.base_class_count = int(proto_dict.get("base_class_count", len(self.class_names)))
@@ -194,27 +196,77 @@ class FishClassifierV4:
         confidence = float(probs[top_idx])
         exec_time = time.time() - start_time
         n_total = len(self.class_names)
+        is_custom = pred_class in self.custom_species
 
-        is_uncertain = (max_sim < 0.78) or (margin < 0.04)
+        # Dual-Signal OOD Evaluation (Max Cosine Similarity + Mahalanobis Manifold Distance)
+        maha_dist, maha_cutoff, fused_ood_z, in_domain_score = None, None, None, round(max(0.0, max_sim) * 100.0, 1)
+        membership = "in_group" if max_sim >= 0.85 else ("borderline" if max_sim >= 0.78 else "out_of_group")
+
+        if self.prec_384 is not None and self.ood_stats is not None:
+            e_np = query_emb.cpu().numpy()
+            protos_np = self.prototypes.cpu().numpy()
+            diffs = e_np - protos_np
+            maha_dist = float(np.sqrt(np.min(np.sum((diffs @ self.prec_384) * diffs, axis=1))))
+            st = self.ood_stats
+            maha_cutoff = st["maha_p92"]
+
+            z_maha = -(maha_dist - st["maha_mean"]) / st["maha_std"]
+            z_sim = (max_sim - st["sim_mean"]) / st["sim_std"]
+            fused_ood_z = float(0.85 * z_maha + 0.15 * z_sim)
+            z_rel = (fused_ood_z - st["fused_p10"]) / max(st["fused_std"], 0.4)
+            in_domain_score = round(float(100.0 / (1.0 + np.exp(-1.1 * (z_rel + 0.6)))), 1)
+
+            if is_custom and max_sim >= 0.78:
+                membership = "in_group"
+                in_domain_score = max(in_domain_score, round(max_sim * 100.0, 1))
+            elif max_sim >= 0.82 and maha_dist <= st["maha_p92"] and fused_ood_z >= st["fused_p15"]:
+                membership = "in_group"
+            elif (max_sim >= 0.78 and maha_dist <= st["maha_p95"] * 1.12) or (max_sim >= 0.85 and maha_dist <= st["maha_p95"] * 1.25):
+                membership = "borderline"
+            else:
+                membership = "out_of_group"
+
+        is_uncertain = (membership != "in_group") or (margin < 0.04)
         uncertainty_reason = ""
-        if max_sim < 0.78:
+        if membership == "out_of_group":
+            maha_txt = f" | فاصله منیفولد: {maha_dist:.1f} > آستانه {maha_cutoff:.1f}" if maha_dist is not None else ""
             uncertainty_reason = (
-                f"حداکثر تشابه ساختاری پایین است ({max_sim*100:.1f}٪ < آستانه ۷۸٪). "
-                f"این نمونه احتمالاً متعلق به گونه‌ای جدید خارج از {n_total} گونه ثبت‌شده است "
-                f"(می‌توانید همین نمونه را مستقیماً به عنوان گونه جدید ثبت کنید)."
+                f"الگوی نمونه خارج از توزیع {n_total} گونه شناخته‌شده تشخیص داده شد "
+                f"(تشابه {max_sim*100:.1f}٪ | امتیاز منیفولد {in_domain_score:.1f}٪{maha_txt}). "
+                f"اگر این فلس متعلق به گونه‌ای جدید است، می‌توانید فوراً آن را بدون آموزش مجدد ثبت کنید."
+            )
+        elif membership == "borderline":
+            second_class = self.class_names[int(sorted_indices[1])]
+            uncertainty_reason = (
+                f"تطابق در ناحیه مرزی منیفولد قرار دارد؛ لطفاً ۳ گزینه برتر (به‌ویژه «{pred_class}» و «{second_class}») را بررسی کرده یا در صورت جدید بودن، گونه را ثبت کنید."
             )
         elif margin < 0.04:
             second_class = self.class_names[int(sorted_indices[1])]
             uncertainty_reason = (
-                f"ابهام نزدیک بین دو گونه: «{pred_class}» و «{second_class}» "
-                f"(اختلاف تشابه {margin*100:.1f}٪)."
+                f"رقابت بسیار نزدیک بین دو گونه برتر «{pred_class}» و «{second_class}» (اختلاف {margin*100:.1f}٪) — بررسی ۳ گزینه برتر توصیه می‌شود."
             )
+
+        # Top-3 Consensus Summary
+        top3_cum_prob = float(sum(probs[int(i)] for i in sorted_indices[:3]) * 100.0)
+        top3_genera = [self.class_names[int(i)].split()[0] for i in sorted_indices[:3] if self.class_names[int(i)]]
+        genus_counts = {}
+        for g in top3_genera:
+            genus_counts[g] = genus_counts.get(g, 0) + 1
+        consensus_genus, consensus_count = max(genus_counts.items(), key=lambda kv: kv[1]) if genus_counts else ("", 0)
 
         meta = {
             "execution_time": f"{exec_time:.2f}s",
             "margin": round(margin * 100, 1),
+            "membership": membership,
+            "maha_dist": round(maha_dist, 2) if maha_dist is not None else None,
+            "maha_cutoff": round(maha_cutoff, 2) if maha_cutoff is not None else None,
+            "fused_ood_z": round(fused_ood_z, 3) if fused_ood_z is not None else None,
+            "in_domain_score": in_domain_score,
             "is_uncertain": is_uncertain,
-            "is_custom_species": pred_class in self.custom_species,
+            "is_custom_species": is_custom,
+            "top3_cumulative_confidence": round(min(100.0, top3_cum_prob), 1),
+            "top3_consensus_genus": consensus_genus,
+            "top3_consensus_count": consensus_count,
             "uncertainty_reason": uncertainty_reason,
             "crop_overlay_image": crop_overlay_b64,
         }

@@ -191,16 +191,36 @@
 
             <!-- Primary Identified Species Card (Full Untruncated Name) -->
             <div class="primary-match-card">
-                <div>
+                <div style="flex: 1; min-width: 220px;">
                     <div class="match-species-title" data-i18n="closest_species_label">گونه پیشنهادی مدل:</div>
                     <div id="predicted-class" class="match-species-name">-</div>
+                    <div id="predicted-ood-meta" style="margin-top: 0.45rem; font-size: 0.8rem; color: var(--text-secondary); display: flex; flex-wrap: wrap; gap: 0.65rem; align-items: center;"></div>
                 </div>
                 <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                    <div class="match-confidence-badge">
+                    <div class="match-confidence-badge" title="Cosine Similarity">
                         <i class="fa-solid fa-shield-halved"></i>
                         <span id="predicted-sim">-%</span>
                     </div>
+                    <div id="predicted-top3-badge" class="match-confidence-badge" style="color: #047857; border-color: #a7f3d0; background: #ecfdf5; font-size: 0.9rem;">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span id="predicted-top3-prob">Top-3: -%</span>
+                    </div>
                 </div>
+            </div>
+
+            <!-- Top-3 Shortlist Consensus Panel -->
+            <div id="top3-shortlist-panel" style="background: #f8fafc; border: 1px solid var(--card-border); border-radius: var(--radius-lg); padding: 1.1rem 1.25rem; margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.85rem;">
+                    <h4 id="top3-panel-title" style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 0.45rem;">
+                        <i class="fa-solid fa-ranking-star" style="color: var(--primary);"></i>
+                        <span>فهرست ۳ گونه محتمل برتر (Top-3 Shortlist)</span>
+                    </h4>
+                    <div style="display: flex; gap: 0.45rem; flex-wrap: wrap; align-items: center;">
+                        <span id="top3-genus-pill" style="font-size: 0.76rem; font-weight: 700; padding: 0.22rem 0.65rem; border-radius: 99px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">-</span>
+                        <span id="top3-cum-pill" style="font-size: 0.76rem; font-weight: 700; padding: 0.22rem 0.65rem; border-radius: 99px; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;">-</span>
+                    </div>
+                </div>
+                <div id="top3-cards-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 0.75rem;"></div>
             </div>
 
             <!-- Tri-Card Visual Inspection Deck -->
@@ -746,11 +766,81 @@
                 uncBox.classList.add('hidden');
             }
 
-            // 3. Primary Prediction
+            // 3. Primary Prediction & Dual Manifold OOD Metrics
             document.getElementById('predicted-class').textContent = data.prediction;
             const pctSign = isFa ? '٪' : '%';
-            document.getElementById('predicted-sim').textContent = `${data.overall_similarity}${pctSign}`;
+            const simPrefix = isFa ? 'تشابه ' : 'Sim ';
+            document.getElementById('predicted-sim').textContent = `${simPrefix}${data.overall_similarity}${pctSign}`;
             document.getElementById('exec-time').textContent = isFa ? `زمان پردازش: ${data.execution_time}` : `Inference: ${data.execution_time}`;
+
+            const oodMetaEl = document.getElementById('predicted-ood-meta');
+            if (oodMetaEl) {
+                const inDom = (data.in_domain_score !== undefined && data.in_domain_score !== null) ? data.in_domain_score : data.overall_similarity;
+                const mahaTxt = (data.maha_dist !== undefined && data.maha_dist !== null)
+                    ? (data.maha_cutoff ? `${data.maha_dist} / ${data.maha_cutoff}` : `${data.maha_dist}`)
+                    : '-';
+                oodMetaEl.innerHTML = isFa
+                    ? `<span><i class="fa-solid fa-compass" style="color:var(--primary);"></i> امتیاز انطباق منیفولد (In-Domain): <strong>${inDom}${pctSign}</strong></span>
+                       <span>&bull; فاصله ماهالانوبیس (۳۸۴بعدی): <strong>${mahaTxt}</strong></span>`
+                    : `<span><i class="fa-solid fa-compass" style="color:var(--primary);"></i> In-Domain Score: <strong>${inDom}${pctSign}</strong></span>
+                       <span>&bull; Mahalanobis Dist (384-d): <strong>${mahaTxt}</strong></span>`;
+            }
+
+            const top3Cum = (data.top3_cumulative_confidence !== undefined && data.top3_cumulative_confidence !== null)
+                ? data.top3_cumulative_confidence
+                : data.confidence;
+            const top3BadgeEl = document.getElementById('predicted-top3-prob');
+            if (top3BadgeEl) {
+                top3BadgeEl.textContent = isFa ? `احتمال تجمعی Top-3: ${top3Cum}${pctSign}` : `Top-3 Cum: ${top3Cum}${pctSign}`;
+            }
+
+            // 3b. Top-3 Shortlist Consensus Panel
+            const top3TitleEl = document.getElementById('top3-panel-title');
+            if (top3TitleEl) {
+                top3TitleEl.innerHTML = `<i class="fa-solid fa-ranking-star" style="color: var(--primary);"></i> <span>${isFa ? 'فهرست ۳ گونه محتمل برتر (Top-3 Shortlist Consensus)' : 'Top-3 Shortlist Consensus (Candidate Shortlist)'}</span>`;
+            }
+            const genusPill = document.getElementById('top3-genus-pill');
+            if (genusPill) {
+                const gName = data.top3_consensus_genus || '-';
+                const gCnt = data.top3_consensus_count || 0;
+                genusPill.textContent = isFa ? `اجماع جنس در Top-3: ${gName} (${gCnt}/۳)` : `Genus Consensus: ${gName} (${gCnt}/3)`;
+            }
+            const cumPill = document.getElementById('top3-cum-pill');
+            if (cumPill) {
+                cumPill.textContent = isFa ? `اطمینان تجمعی سه‌تایی: ${top3Cum}${pctSign}` : `Top-3 Cumulative Prob: ${top3Cum}${pctSign}`;
+            }
+            const top3Grid = document.getElementById('top3-cards-grid');
+            if (top3Grid) {
+                top3Grid.innerHTML = '';
+                const cands = (data.top3_candidates && data.top3_candidates.length)
+                    ? data.top3_candidates
+                    : (data.top_matches || []).slice(0, 3);
+                cands.forEach(c => {
+                    const card = document.createElement('div');
+                    const isFirst = (c.rank === 1);
+                    card.style.cssText = isFirst
+                        ? 'background: #ffffff; border: 2px solid #86efac; border-radius: var(--radius-md); padding: 0.75rem 0.9rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.45rem; box-shadow: var(--shadow-xs);'
+                        : 'background: #ffffff; border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 0.75rem 0.9rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.45rem;';
+                    const probVal = (c.probability !== undefined && c.probability !== null) ? `${c.probability}${pctSign}` : '-';
+                    const star = c.is_custom ? ' ★' : '';
+                    const escapedSp = (c.species_name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                    const actionLabel = isFa
+                        ? (isFirst ? 'تایید گزینه ۱' : `انتخاب گزینه ${c.rank} جهت اصلاح`)
+                        : (isFirst ? 'Accept #1' : `Use #${c.rank} in Correction`);
+                    const actionFn = isFirst ? `selectCandidateForCorrection('${escapedSp}', true)` : `selectCandidateForCorrection('${escapedSp}', false)`;
+                    card.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:0.4rem;">
+                            <span style="font-size:0.74rem; font-weight:800; padding:0.15rem 0.5rem; border-radius:6px; background:${isFirst ? '#dcfce7' : '#f1f5f9'}; color:${isFirst ? '#15803d' : '#475569'};">#${c.rank}</span>
+                            <span style="font-size:0.75rem; font-weight:700; color:var(--primary);">${isFa ? 'شباهت' : 'Sim'}: ${c.similarity}${pctSign} &bull; ${isFa ? 'احتمال' : 'Prob'}: ${probVal}</span>
+                        </div>
+                        <div style="font-size:0.86rem; font-weight:700; color:var(--text-primary); line-height:1.35; word-break:break-word;">${c.species_name}${star}</div>
+                        <button type="button" onclick="${actionFn}" style="margin-top:0.2rem; border:1px solid ${isFirst ? '#86efac' : '#cbd5e1'}; background:${isFirst ? '#f0fdf4' : '#f8fafc'}; color:${isFirst ? '#15803d' : '#334155'}; border-radius:6px; padding:0.32rem 0.55rem; font-size:0.74rem; font-weight:600; cursor:pointer; width:100%;">
+                            <i class="fa-solid ${isFirst ? 'fa-check' : 'fa-hand-pointer'}"></i> ${actionLabel}
+                        </button>
+                    `;
+                    top3Grid.appendChild(card);
+                });
+            }
 
             // 4. Visual Tri-Deck (use server-converted preview_image so .tif works cleanly)
             const previewSrc = data.preview_image || imagePreview.src;
@@ -796,6 +886,24 @@
         }
 
         // Active Learning & Zero-Retraining Novel Species Actions
+        function selectCandidateForCorrection(speciesName, confirmImmediately) {
+            const corrSelect = document.getElementById('correct-species-select');
+            if (corrSelect) {
+                corrSelect.value = speciesName;
+            }
+            if (confirmImmediately) {
+                submitFeedback('confirmed');
+                return;
+            }
+            const corrDrawer = document.getElementById('correction-drawer');
+            const novelDrawer = document.getElementById('novel-species-drawer');
+            if (novelDrawer) novelDrawer.classList.add('hidden');
+            if (corrDrawer) {
+                corrDrawer.classList.remove('hidden');
+                corrDrawer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
         function toggleCorrectionDrawer() {
             const drawer = document.getElementById('correction-drawer');
             const novelDrawer = document.getElementById('novel-species-drawer');
